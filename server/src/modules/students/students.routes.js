@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { authorize, ROLES } from '../../middleware/auth.js';
+import * as c from './students.controller.js';
+
+const router = Router();
+
+// Row-level scoping (teacher → own classes, parent → own children) is enforced in the service.
+router.get('/', authorize(ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TEACHER, ROLES.PARENT), c.listStudents);
+router.post('/', authorize(ROLES.ADMIN), c.registerStudent);
+router.get('/:id', authorize(ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TEACHER, ROLES.PARENT), c.getStudent);
+router.put('/:id', authorize(ROLES.ADMIN), c.updateStudent);
+
+export default router;
