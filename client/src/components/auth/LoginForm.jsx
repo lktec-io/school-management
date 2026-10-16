@@ -18,8 +18,9 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
     try {
       user = await login(identifier.trim(), password);
     } catch (error) {
-      // Show the common sign-in failures in the page language; field errors pass through unchanged.
-      const localized = copy.errors?.[error.status];
+      // Translate known sign-in failures by the server's error code (never by HTTP status alone:
+      // a 403 can mean an inactive account or a rejected origin). Unknown errors keep the server text.
+      const localized = copy.errors?.[error.code];
       if (localized && !error.details) error.message = localized;
       throw error;
     }

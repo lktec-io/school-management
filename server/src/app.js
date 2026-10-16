@@ -6,6 +6,7 @@ import env from './config/env.js';
 import { ApiError, errorHandler, notFound } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import v1Routes from './routes/index.js';
+import logger from './utils/logger.js';
 
 const app = express();
 
@@ -23,7 +24,9 @@ app.use(cors({
     // Requests without an Origin header (same-origin GETs, server-to-server, curl) are allowed;
     // browsers always send Origin on cross-origin and state-changing requests.
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
-    return callback(new ApiError(403, 'Origin not allowed', { code: 'CORS_REJECTED' }));
+    // Logged so a misconfigured DOMAIN/CORS_ORIGINS is obvious in `pm2 logs`.
+    logger.warn('Rejected request from origin not in CORS_ORIGINS', { origin, allowed: [...allowedOrigins] });
+    return callback(new ApiError(403, `Origin not allowed: ${origin}`, { code: 'CORS_REJECTED' }));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
