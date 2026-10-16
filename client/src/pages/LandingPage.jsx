@@ -3,15 +3,17 @@ import {
   MapPin, Megaphone, Phone, Receipt, ShieldCheck, Target, Telescope, UsersRound, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import Crest from '../components/layout/Crest.jsx';
 import HeroSlideshow from '../components/landing/HeroSlideshow.jsx';
-import LoginDialog from '../components/landing/LoginDialog.jsx';
+import LanguageSwitch from '../components/ui/LanguageSwitch.jsx';
 import { COPY, LEADERS, SLIDES } from '../content/landing.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
 import { formatPhone } from '../utils/format.js';
+import '../styles/gov.css';
 import '../styles/landing.css';
 
 const SECTIONS = [
@@ -22,16 +24,6 @@ const SECTIONS = [
   { id: 'huduma', key: 'services' },
 ];
 const SERVICE_ICONS = { results: FileText, fees: Receipt, sms: MessageSquareText, staff: LayoutDashboard };
-const LANG_KEY = 'school-site-lang';
-
-function readLang() {
-  try {
-    const saved = window.localStorage.getItem(LANG_KEY);
-    return saved === 'en' ? 'en' : 'sw';
-  } catch {
-    return 'sw';
-  }
-}
 
 function initialsOf(name = '') {
   return name.replace(/\b(Mhe|Dkt|Dr|Prof|Mwl|H\.E)\.\s*/g, '').split(/\s+/).filter((part) => /^[A-Za-z]/.test(part))
@@ -78,26 +70,16 @@ function InfoCard({ icon: Icon, title, summary, children, labels, accent }) {
 }
 
 /** Public website of the school, styled after official government portals. */
-export default function LandingPage({ loginOpen = false }) {
+export default function LandingPage() {
   const { status } = useAuth();
   const school = useSchoolProfile();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [lang, setLang] = useState(readLang);
+  const { i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'sw';
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('mwanzo');
   const announcements = useApi('/announcements', { limit: 6 });
   const t = COPY[lang];
   const authenticated = status === 'authenticated';
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    try {
-      window.localStorage.setItem(LANG_KEY, lang);
-    } catch {
-      // Storage may be unavailable (private mode); the choice still applies for this visit.
-    }
-  }, [lang]);
 
   useEffect(() => {
     if (school?.name) document.title = school.name;
@@ -116,18 +98,6 @@ export default function LandingPage({ loginOpen = false }) {
     return () => observer.disconnect();
   }, []);
 
-  if (loginOpen && authenticated) return <Navigate to="/dashboard" replace />;
-
-  const openLogin = () => {
-    setMenuOpen(false);
-    navigate('/login', { state: location.state });
-  };
-  const closeLogin = () => navigate('/', { replace: true });
-  const handleSignedIn = (user) => {
-    const target = user.mustChangePassword ? '/account/password' : location.state?.from?.pathname || '/dashboard';
-    navigate(target, { replace: true });
-  };
-
   const headmasterName = school?.headmasterName;
   const year = new Date().getFullYear();
 
@@ -136,9 +106,9 @@ export default function LandingPage({ loginOpen = false }) {
       <LayoutDashboard size={16} aria-hidden="true" /> {t.nav.openPortal}
     </Link>
   ) : (
-    <button type="button" className="gov-btn gov-btn--gold" onClick={openLogin}>
+    <Link to="/login" className="gov-btn gov-btn--gold">
       <LogIn size={16} aria-hidden="true" /> {t.nav.login}
-    </button>
+    </Link>
   );
 
   return (
@@ -162,13 +132,10 @@ export default function LandingPage({ loginOpen = false }) {
             {school?.email && <a href={`mailto:${school.email}`}><Mail size={13} aria-hidden="true" />{school.email}</a>}
           </div>
           <nav className="utility-bar__links" aria-label="Utility">
-            <button type="button" onClick={authenticated ? () => navigate('/reports') : openLogin}>{t.utility.results}</button>
-            <button type="button" onClick={authenticated ? () => navigate('/dashboard') : openLogin}>{t.utility.fees}</button>
+            <Link to={authenticated ? '/reports' : '/login'} state={authenticated ? undefined : { from: { pathname: '/reports' } }}>{t.utility.results}</Link>
+            <Link to={authenticated ? '/dashboard' : '/login'}>{t.utility.fees}</Link>
             <a href="#mawasiliano">{t.utility.contact}</a>
-            <div className="lang-switch" role="group" aria-label={t.utility.language}>
-              <button type="button" aria-pressed={lang === 'sw'} onClick={() => setLang('sw')}>SW</button>
-              <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>EN</button>
-            </div>
+            <LanguageSwitch className="lang-switch" />
           </nav>
         </div>
       </div>
@@ -338,7 +305,7 @@ export default function LandingPage({ loginOpen = false }) {
                     {authenticated ? (
                       <Link to="/dashboard" className="service-card__action">{t.nav.openPortal} <ExternalLink size={13} aria-hidden="true" /></Link>
                     ) : (
-                      <button type="button" className="service-card__action" onClick={openLogin}>{t.services.action} <LogIn size={13} aria-hidden="true" /></button>
+                      <Link to="/login" className="service-card__action">{t.services.action} <LogIn size={13} aria-hidden="true" /></Link>
                     )}
                   </article>
                 );
@@ -390,9 +357,6 @@ export default function LandingPage({ loginOpen = false }) {
         </div>
       </footer>
 
-      {loginOpen && !authenticated && (
-        <LoginDialog copy={t.login} school={school} onClose={closeLogin} onSuccess={handleSignedIn} />
-      )}
     </div>
   );
 }

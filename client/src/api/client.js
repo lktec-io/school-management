@@ -1,3 +1,5 @@
+import { progress } from '../utils/progress.js';
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/+$/, '');
 
 export class ApiError extends Error {
@@ -28,8 +30,19 @@ function buildUrl(path, params) {
 /**
  * Low-level request. The session lives in an HttpOnly cookie, so every call uses
  * `credentials: 'include'` and no token is ever stored in JavaScript.
+ * Every request drives the top progress bar unless `silent` is set (background polling).
  */
-async function request(method, path, { body, params, signal, responseType = 'json' } = {}) {
+async function request(method, path, options = {}) {
+  if (options.silent) return send(method, path, options);
+  progress.start();
+  try {
+    return await send(method, path, options);
+  } finally {
+    progress.done();
+  }
+}
+
+async function send(method, path, { body, params, signal, responseType = 'json' } = {}) {
   let response;
   try {
     response = await fetch(buildUrl(path, params), {

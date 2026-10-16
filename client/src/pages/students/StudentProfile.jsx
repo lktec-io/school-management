@@ -1,13 +1,14 @@
 import { ArrowLeft, Download, FileText, Pencil, Receipt, RefreshCw, UserRound, Wallet } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import FormField from '../../components/ui/FormField.jsx';
-import { EmptyState, ErrorBlock, InlineAlert, LoadingBlock } from '../../components/ui/Feedback.jsx';
+import { EmptyState, ErrorBlock, InlineAlert, PageSkeleton } from '../../components/ui/Feedback.jsx';
 import Modal from '../../components/ui/Modal.jsx';
-import PageHeader from '../../components/ui/PageHeader.jsx';
 import PaymentModeBadge from '../../components/ui/PaymentModeBadge.jsx';
 import { GradeChip, StatusBadge } from '../../components/ui/StatusBadge.jsx';
+import StudentAvatar from '../../components/ui/StudentAvatar.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
@@ -18,7 +19,6 @@ import {
   EXAM_TYPE_LABELS, LEVEL_LABELS, classLabel, formatDate, formatMoney, formatNumber, formatPhone, titleCase,
 } from '../../utils/format.js';
 import RecordPaymentModal from '../finance/RecordPaymentModal.jsx';
-import StudentRegisterModal from './StudentRegisterModal.jsx';
 
 function StatusChangeModal({ student, transitions, onClose, onSaved }) {
   const toast = useToast();
@@ -64,17 +64,17 @@ function StatusChangeModal({ student, transitions, onClose, onSaved }) {
 }
 
 export default function StudentProfile() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { hasRole } = useAuth();
   const isAdmin = hasRole('admin');
   const isParent = hasRole('parent');
   const { data, error, loading, reload } = useApi(`/students/${id}`);
   const canRecordPayments = hasRole('admin', 'accountant');
-  const classes = useApi(isAdmin ? '/academics/classes' : null);
   const [modal, setModal] = useState(null);
   const { run, pending } = useAsyncAction();
 
-  if (loading && !data) return <LoadingBlock label="Loading student profile…" />;
+  if (loading && !data) return <PageSkeleton />;
   if (error && !data) return <ErrorBlock error={error} onRetry={reload} />;
   if (!data) return null;
 
@@ -82,57 +82,63 @@ export default function StudentProfile() {
 
   return (
     <div className="stack-lg">
-      <Link to="/students" className="back-link"><ArrowLeft size={14} aria-hidden="true" /> {isParent ? 'My children' : 'All students'}</Link>
-      <PageHeader
-        eyebrow={<span className="reg-no">{student.registrationNumber}</span>}
-        title={student.fullName}
-        subtitle={<>{classLabel(student.className, student.streamName)} · {LEVEL_LABELS[student.level]} · <StatusBadge status={student.status} /></>}
-        actions={(
-          <>
-            {performance.length > 0 && (
-              <Link to={`/reports?studentId=${student.id}&examId=${performance[0].examId}`} className="btn btn--outline">
-                <FileText size={16} aria-hidden="true" /> Latest report card
-              </Link>
-            )}
-            {isAdmin && allowedStatusTransitions.length > 0 && (
-              <button type="button" className="btn btn--outline" onClick={() => setModal('status')}>
-                <RefreshCw size={16} aria-hidden="true" /> Change status
-              </button>
-            )}
-            {isAdmin && (
-              <button type="button" className="btn btn--primary" onClick={() => setModal('edit')} disabled={!classes.data}>
-                <Pencil size={16} aria-hidden="true" /> Edit details
-              </button>
-            )}
-          </>
-        )}
-      />
+      <Link to="/students" className="back-link"><ArrowLeft size={14} aria-hidden="true" /> {isParent ? t('nav.items.children') : t('students.allStudents')}</Link>
+      <section className="card profile-hero">
+        <StudentAvatar name={student.fullName} photoUrl={student.photoUrl} size="xl" />
+        <div className="profile-hero__identity">
+          <span className="reg-no">{student.registrationNumber}</span>
+          <h1 className="profile-hero__name">{student.fullName}</h1>
+          <div className="profile-hero__meta">
+            <span>{classLabel(student.className, student.streamName)}</span>
+            <span aria-hidden="true">·</span>
+            <span>{LEVEL_LABELS[student.level]}</span>
+            <StatusBadge status={student.status} />
+          </div>
+        </div>
+        <div className="profile-hero__actions">
+          {performance.length > 0 && (
+            <Link to={`/reports?studentId=${student.id}&examId=${performance[0].examId}`} className="btn btn--outline">
+              <FileText size={16} aria-hidden="true" /> {t('students.profile.latestReport')}
+            </Link>
+          )}
+          {isAdmin && allowedStatusTransitions.length > 0 && (
+            <button type="button" className="btn btn--outline" onClick={() => setModal('status')}>
+              <RefreshCw size={16} aria-hidden="true" /> {t('students.profile.changeStatus')}
+            </button>
+          )}
+          {isAdmin && (
+            <Link to={`/students/${student.id}/edit`} className="btn btn--primary">
+              <Pencil size={16} aria-hidden="true" /> {t('students.profile.edit')}
+            </Link>
+          )}
+        </div>
+      </section>
 
       <div className="profile-grid">
         <section className="card">
-          <div className="card__header"><h2 className="card__title">Bio-data</h2><UserRound size={16} aria-hidden="true" /></div>
+          <div className="card__header"><h2 className="card__title">{t('students.form.bio')}</h2><UserRound size={16} aria-hidden="true" /></div>
           <dl className="definition-list card__body">
-            <dt>Full name</dt><dd>{student.fullName}</dd>
-            <dt>Gender</dt><dd>{student.gender === 'male' ? 'Male' : 'Female'}</dd>
-            <dt>Date of birth</dt><dd className="mono">{formatDate(student.dob)}</dd>
-            <dt>Home address</dt><dd>{student.address || '—'}</dd>
+            <dt>{t('students.profile.fullName')}</dt><dd>{student.fullName}</dd>
+            <dt>{t('students.fields.gender')}</dt><dd>{t(`gender.${student.gender}`)}</dd>
+            <dt>{t('students.fields.dob')}</dt><dd className="mono">{formatDate(student.dob)}</dd>
+            <dt>{t('students.fields.address')}</dt><dd>{student.address || '—'}</dd>
           </dl>
         </section>
         <section className="card">
-          <div className="card__header"><h2 className="card__title">Placement</h2></div>
+          <div className="card__header"><h2 className="card__title">{t('students.form.placement')}</h2></div>
           <dl className="definition-list card__body">
-            <dt>Registration no.</dt><dd className="reg-no">{student.registrationNumber}</dd>
-            <dt>Class</dt><dd>{student.className}</dd>
-            <dt>Stream</dt><dd>{student.streamName || '—'}</dd>
-            <dt>Admission date</dt><dd className="mono">{formatDate(student.admissionDate)}</dd>
+            <dt>{t('students.fields.regNo')}</dt><dd className="reg-no">{student.registrationNumber}</dd>
+            <dt>{t('common.class')}</dt><dd>{student.className}</dd>
+            <dt>{t('common.stream')}</dt><dd>{student.streamName || '—'}</dd>
+            <dt>{t('students.fields.admissionDate')}</dt><dd className="mono">{formatDate(student.admissionDate)}</dd>
           </dl>
         </section>
         <section className="card">
-          <div className="card__header"><h2 className="card__title">Parent / guardian</h2></div>
+          <div className="card__header"><h2 className="card__title">{t('students.form.guardian')}</h2></div>
           <dl className="definition-list card__body">
-            <dt>Name</dt><dd>{student.parentName}</dd>
-            <dt>Phone (SMS)</dt><dd className="mono">{formatPhone(student.parentPhone)}</dd>
-            <dt>Portal account</dt><dd>{student.parentAccountName || <span className="text-muted">Not linked</span>}</dd>
+            <dt>{t('students.fields.guardianName')}</dt><dd>{student.parentName}</dd>
+            <dt>{t('students.fields.guardianPhone')}</dt><dd className="mono">{formatPhone(student.parentPhone)}</dd>
+            <dt>{t('students.fields.parentAccount')}</dt><dd>{student.parentAccountName || <span className="text-muted">{t('students.fields.notLinked')}</span>}</dd>
           </dl>
         </section>
       </div>
@@ -140,10 +146,10 @@ export default function StudentProfile() {
       {fees && (
         <section className="card">
           <div className="card__header">
-            <h2 className="card__title">Fee history</h2>
+            <h2 className="card__title">{t('students.profile.feeHistory')}</h2>
             {canRecordPayments ? (
               <button type="button" className="btn btn--primary btn--sm" onClick={() => setModal('payment')}>
-                <Receipt size={14} aria-hidden="true" /> Record payment
+                <Receipt size={14} aria-hidden="true" /> {t('dash.recordPayment')}
               </button>
             ) : <Wallet size={16} aria-hidden="true" />}
           </div>
@@ -209,7 +215,7 @@ export default function StudentProfile() {
 
       {!hasRole('accountant') && (
         <section className="card">
-          <div className="card__header"><h2 className="card__title">Examination performance</h2></div>
+          <div className="card__header"><h2 className="card__title">{t('students.profile.performance')}</h2></div>
           {performance.length === 0 ? (
             <div className="card__body">
               <EmptyState icon={FileText} title="No results yet" message={isParent ? 'Results appear here once the school publishes them.' : 'No marks have been recorded for this student.'} />
@@ -253,17 +259,6 @@ export default function StudentProfile() {
         </section>
       )}
 
-      {modal === 'edit' && (
-        <StudentRegisterModal
-          student={student}
-          classes={classes.data ?? []}
-          onClose={() => setModal(null)}
-          onSaved={() => {
-            setModal(null);
-            reload();
-          }}
-        />
-      )}
       {modal === 'status' && (
         <StatusChangeModal
           student={student}

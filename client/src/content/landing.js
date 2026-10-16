@@ -6,6 +6,7 @@
  *    names below (JPG, roughly 3:4 portrait). Until a photo exists, an initials frame is shown.
  *  - Slideshow images: replace `image` with a local file (e.g. '/images/slides/campus.jpg') or any
  *    https://images.unsplash.com URL (allowed by the site's Content Security Policy).
+ *  - Portal and login-page labels live in src/i18n/locales/ (sw.js, en.js).
  *  - School name, contacts, vision, mission and the headmaster's name come from
  *    School Settings in the portal; announcements are managed there too.
  */
@@ -160,27 +161,6 @@ const sw = {
     portal: 'Mfumo wa Shule',
     rights: 'Haki zote zimehifadhiwa.',
   },
-  login: {
-    title: 'Ingia Kwenye Mfumo',
-    subtitle: 'Tumia barua pepe au namba ya simu iliyosajiliwa na shule.',
-    identifier: 'Barua pepe au namba ya simu',
-    password: 'Nenosiri',
-    show: 'Onyesha nenosiri',
-    hide: 'Ficha nenosiri',
-    submit: 'Ingia',
-    submitting: 'Inaingia…',
-    forgot: 'Umesahau nenosiri? Wasiliana na ofisi ya shule ili kubadilishiwa.',
-    legal: 'Matumizi yaliyoidhinishwa pekee. Shughuli zote kwenye mfumo huhifadhiwa kwa usalama.',
-    close: 'Funga',
-    errors: {
-      UNAUTHORIZED: 'Barua pepe/namba ya simu au nenosiri si sahihi.',
-      ACCOUNT_INACTIVE: 'Akaunti yako haijaamilishwa. Wasiliana na ofisi ya shule.',
-      LOCKED: 'Akaunti imefungwa kwa muda baada ya majaribio mengi. Jaribu tena baadaye.',
-      TOO_MANY_REQUESTS: 'Majaribio mengi sana. Tafadhali subiri dakika chache kisha ujaribu tena.',
-      NETWORK_ERROR: 'Imeshindikana kuunganisha na seva. Angalia mtandao wako.',
-      CORS_REJECTED: 'Seva imekataa ombi kutoka anwani hii ya tovuti (CORS). Msimamizi wa mfumo aangalie DOMAIN/CORS_ORIGINS kwenye .env.',
-    },
-  },
 };
 
 const en = {
@@ -264,27 +244,6 @@ const en = {
     quickLinks: 'Quick Links',
     portal: 'School Portal',
     rights: 'All rights reserved.',
-  },
-  login: {
-    title: 'Portal Login',
-    subtitle: 'Use the email address or phone number registered with the school.',
-    identifier: 'Email or phone number',
-    password: 'Password',
-    show: 'Show password',
-    hide: 'Hide password',
-    submit: 'Sign in',
-    submitting: 'Signing in…',
-    forgot: 'Forgotten your password? Contact the school office to have it reset.',
-    legal: 'Authorised use only. Activity on this portal is logged for security and audit purposes.',
-    close: 'Close',
-    errors: {
-      UNAUTHORIZED: 'Incorrect email/phone number or password.',
-      ACCOUNT_INACTIVE: 'Your account is not active. Contact the school office.',
-      LOCKED: 'This account is temporarily locked after repeated failed sign-ins. Try again later.',
-      TOO_MANY_REQUESTS: 'Too many attempts. Please wait a few minutes and try again.',
-      NETWORK_ERROR: 'Unable to reach the server. Please check your connection.',
-      CORS_REJECTED: 'The server rejected requests from this web address (CORS). The administrator should check DOMAIN/CORS_ORIGINS in .env.',
-    },
   },
 };
 

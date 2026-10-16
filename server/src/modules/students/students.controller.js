@@ -3,6 +3,7 @@ import { auditContext } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { optionalId, parseId, validator } from '../../utils/validator.js';
+import * as photoService from './photo.service.js';
 import * as studentsService from './students.service.js';
 
 const NAME_PATTERN = /^[\p{L}][\p{L}' .-]*$/u;
@@ -35,12 +36,14 @@ function validateStudent(body, { partial = false } = {}) {
 }
 
 export const listStudents = asyncHandler(async (req, res) => {
-  const { status, search, sort, dir } = req.query;
+  const { status, gender, search, sort, dir } = req.query;
   if (status && !studentsService.STUDENT_STATUSES.includes(status)) throw ApiError.badRequest('Invalid status filter');
+  if (gender && !['male', 'female'].includes(gender)) throw ApiError.badRequest('Invalid gender filter');
   const filters = {
     classId: optionalId(req.query.classId, 'classId'),
     streamId: optionalId(req.query.streamId, 'streamId'),
     status,
+    gender,
     search: typeof search === 'string' ? search.trim().slice(0, 100) : '',
     sort,
     dir,
@@ -57,6 +60,33 @@ export const registerStudent = asyncHandler(async (req, res) => {
 export const getStudent = asyncHandler(async (req, res) => {
   const profile = await studentsService.getStudentProfile(parseId(req.params.id), req.user);
   res.json({ success: true, data: profile });
+});
+
+export const uploadPhoto = asyncHandler(async (req, res) => {
+  const id = parseId(req.params.id);
+  const { dataUrl } = validator(req.body).string('dataUrl', { required: true, max: 3 * 1024 * 1024 }).result();
+  await photoService.savePhoto(id, dataUrl, auditContext(req));
+  const student = await studentsService.getStudentRecord(id);
+  res.json({ success: true, data: student, message: 'Photo updated' });
+});
+
+export const deletePhoto = asyncHandler(async (req, res) => {
+  await photoService.deletePhoto(parseId(req.params.id), auditContext(req));
+  res.json({ success: true, message: 'Photo removed' });
+});
+
+export const getPhoto = asyncHandler(async (req, res) => {
+  const photoPath = await studentsService.visiblePhotoPath(parseId(req.params.id), req.user);
+  const photo = photoPath ? await photoService.readPhoto(photoPath) : null;
+  if (!photo) throw ApiError.notFound('No photo uploaded');
+  res.set({
+    'Content-Type': photo.mime,
+    'Content-Length': photo.buffer.length,
+    // URLs are versioned per upload, so the browser may keep them; private because they need a session.
+    'Cache-Control': 'private, max-age=86400',
+    'X-Content-Type-Options': 'nosniff',
+  });
+  res.send(photo.buffer);
 });
 
 export const updateStudent = asyncHandler(async (req, res) => {

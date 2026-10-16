@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { AcademicProvider } from './context/AcademicContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import './i18n/index.js'
 import './styles/theme.css'
 import './styles/app.css'
 

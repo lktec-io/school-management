@@ -1,51 +1,53 @@
 import {
   FileText, GraduationCap, KeyRound, Landmark, LayoutDashboard, Layers, MessageSquareText, NotebookPen, Receipt,
-  Settings, ShieldCheck, TrendingDown, UserCog, UserX, Wallet,
+  Settings, TrendingDown, UserCog, UserX, Wallet,
 } from 'lucide-react';
 
 const ALL_ROLES = ['admin', 'accountant', 'teacher', 'parent'];
 const FINANCE = ['admin', 'accountant'];
 
-/** Sidebar structure; each item is shown only to the listed roles. */
+/**
+ * Sidebar structure; each item is shown only to the listed roles.
+ * Labels are translation keys: `nav.sections.<section>` and `nav.items.<item>`.
+ */
 export const NAV_SECTIONS = [
   {
-    title: 'Overview',
-    items: [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES, end: true }],
+    id: 'overview',
+    items: [{ id: 'dashboard', to: '/dashboard', icon: LayoutDashboard, roles: ALL_ROLES, end: true }],
   },
   {
-    title: 'Academics',
+    id: 'academics',
     items: [
-      { to: '/students', label: 'Students', icon: GraduationCap, roles: ['admin', 'accountant', 'teacher'] },
-      { to: '/students', label: 'My Children', icon: GraduationCap, roles: ['parent'] },
-      { to: '/marks', label: 'Marks Entry', icon: NotebookPen, roles: ['admin', 'teacher'] },
-      { to: '/reports', label: 'Report Cards', icon: FileText, roles: ['admin', 'teacher', 'parent'] },
-      { to: '/academics', label: 'Academic Setup', icon: Layers, roles: ['admin'] },
+      { id: 'students', to: '/students', icon: GraduationCap, roles: ['admin', 'accountant', 'teacher'] },
+      { id: 'children', to: '/students', icon: GraduationCap, roles: ['parent'] },
+      { id: 'marks', to: '/marks', icon: NotebookPen, roles: ['admin', 'teacher'] },
+      { id: 'reports', to: '/reports', icon: FileText, roles: ['admin', 'teacher', 'parent'] },
+      { id: 'academics', to: '/academics', icon: Layers, roles: ['admin'] },
     ],
   },
   {
-    title: 'Finance',
+    id: 'finance',
     items: [
-      { to: '/finance', label: 'Finance Overview', icon: Landmark, roles: FINANCE, end: true },
-      { to: '/finance/payments', label: 'Payments', icon: Receipt, roles: FINANCE },
-      { to: '/finance/defaulters', label: 'Fee Defaulters', icon: UserX, roles: FINANCE },
-      { to: '/finance/fees', label: 'Fee Setup', icon: Wallet, roles: FINANCE },
-      { to: '/finance/expenses', label: 'Expenses', icon: TrendingDown, roles: FINANCE },
+      { id: 'finance', to: '/finance', icon: Landmark, roles: FINANCE, end: true },
+      { id: 'payments', to: '/finance/payments', icon: Receipt, roles: FINANCE },
+      { id: 'defaulters', to: '/finance/defaulters', icon: UserX, roles: FINANCE },
+      { id: 'fees', to: '/finance/fees', icon: Wallet, roles: FINANCE },
+      { id: 'expenses', to: '/finance/expenses', icon: TrendingDown, roles: FINANCE },
     ],
   },
   {
-    title: 'Communication',
-    items: [{ to: '/sms', label: 'SMS Center', icon: MessageSquareText, roles: FINANCE }],
+    id: 'communication',
+    items: [{ id: 'sms', to: '/sms', icon: MessageSquareText, roles: FINANCE }],
   },
   {
-    title: 'Administration',
+    id: 'administration',
     items: [
-      { to: '/users', label: 'User Accounts', icon: UserCog, roles: ['admin'] },
-      { to: '/audit', label: 'Audit Trail', icon: ShieldCheck, roles: ['admin'] },
-      { to: '/settings', label: 'School Settings', icon: Settings, roles: ['admin'] },
+      { id: 'users', to: '/users', icon: UserCog, roles: ['admin'] },
+      { id: 'settings', to: '/settings', icon: Settings, roles: ['admin'] },
     ],
   },
   {
-    title: 'My Account',
-    items: [{ to: '/account/password', label: 'Change Password', icon: KeyRound, roles: ALL_ROLES }],
+    id: 'account',
+    items: [{ id: 'password', to: '/account/password', icon: KeyRound, roles: ALL_ROLES }],
   },
 ];

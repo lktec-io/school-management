@@ -16,6 +16,7 @@ function FeeTypeModal({ feeType, onClose, onSaved }) {
     name: feeType?.name ?? '',
     code: feeType?.code ?? '',
     description: feeType?.description ?? '',
+    displayOrder: feeType?.displayOrder ?? 0,
     isActive: feeType?.isActive ?? true,
   });
   return (
@@ -37,8 +38,11 @@ function FeeTypeModal({ feeType, onClose, onSaved }) {
         <FormField label="Code" required error={form.errors.code} hint="e.g. TUITION">
           <input className="form-control mono" {...form.bind('code')} />
         </FormField>
-        <FormField label="Description" error={form.errors.description} className="span-2">
+        <FormField label="Description" error={form.errors.description}>
           <input className="form-control" maxLength={255} {...form.bind('description')} />
+        </FormField>
+        <FormField label="Display order" error={form.errors.displayOrder} hint="Lower numbers are listed first">
+          <input type="number" min={0} max={999} className="form-control mono" {...form.bind('displayOrder')} />
         </FormField>
       </div>
       {feeType && <label className="form-check"><input {...form.bindCheckbox('isActive')} /> Active</label>}
@@ -64,10 +68,11 @@ export default function FeeTypesPanel() {
         <section className="card">
           <div className="table-wrapper">
             <table className="data-table">
-              <thead><tr><th>Code</th><th>Name</th><th>Description</th><th className="numeric">Structures</th><th>Status</th><th className="actions"><span className="sr-only">Actions</span></th></tr></thead>
+              <thead><tr><th className="numeric">Order</th><th>Code</th><th>Name</th><th>Description</th><th className="numeric">Structures</th><th>Status</th><th className="actions"><span className="sr-only">Actions</span></th></tr></thead>
               <tbody>
                 {data.map((type) => (
                   <tr key={type.id}>
+                    <td className="numeric">{type.displayOrder}</td>
                     <td className="mono">{type.code}</td>
                     <td className="data-table__primary">{type.name}</td>
                     <td>{type.description || <span className="text-muted">—</span>}</td>

@@ -88,6 +88,7 @@ function validateFeeType(body, { partial = false } = {}) {
     .string('name', { required: true, max: 80 })
     .string('code', { required: true, max: 20, pattern: CODE_PATTERN, patternMessage: 'Letters, numbers and hyphens only', transform: (v) => v.toUpperCase() })
     .string('description', { max: 255 })
+    .integer('displayOrder', { min: 0, max: 999 })
     .boolean('isActive')
     .result();
 }

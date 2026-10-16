@@ -390,7 +390,7 @@ export async function computeClassResults(examOrId, classId, { streamId = null }
        JOIN students s ON s.id = m.student_id
        LEFT JOIN streams st ON st.id = m.stream_id
       WHERE m.exam_id = ? AND m.class_id = ?
-      ORDER BY sub.is_core DESC, sub.name`,
+      ORDER BY sub.display_order, sub.is_core DESC, sub.name`,
     [exam.id, classId],
   ), ['score']), ['isAbsent', 'isCore']);
 

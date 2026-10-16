@@ -1,5 +1,6 @@
 import { Download, Plus, Receipt, Search, Undo2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/ui/Feedback.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
@@ -13,12 +14,21 @@ import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { downloadReceipt } from '../../utils/finance.js';
 import { PAYMENT_MODE_LABELS, classLabel, formatDate, formatMoney } from '../../utils/format.js';
 import RecordPaymentModal from './RecordPaymentModal.jsx';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY_FILTERS = { search: '', termId: '', paymentMode: '', status: '', dateFrom: '', dateTo: '', page: 1 };
 
 export default function PaymentList() {
+  const { t } = useTranslation();
   const toast = useToast();
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [params] = useSearchParams();
+  // Dashboard charts link here with a payment mode or month range pre-selected.
+  const [filters, setFilters] = useState(() => ({
+    ...EMPTY_FILTERS,
+    paymentMode: params.get('paymentMode') || '',
+    dateFrom: params.get('dateFrom') || '',
+    dateTo: params.get('dateTo') || '',
+  }));
   const [searchInput, setSearchInput] = useState('');
   const [modal, setModal] = useState(null);
   const { run, pending } = useAsyncAction();
@@ -35,9 +45,9 @@ export default function PaymentList() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Finance"
-        title="Fee payments"
-        subtitle="Every payment received, with official receipts. Payments are reversed, never deleted."
+        eyebrow={t('nav.sections.finance')}
+        title={t('pages.payments.title')}
+        subtitle={t('pages.payments.subtitle')}
         actions={(
           <button type="button" className="btn btn--primary" onClick={() => setModal({ type: 'record' })}>
             <Plus size={16} aria-hidden="true" /> Record payment

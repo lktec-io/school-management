@@ -3,6 +3,7 @@ import path from 'node:path';
 import env from '../../config/env.js';
 import { ApiError } from '../../middleware/errorHandler.js';
 import { recordAudit } from '../../utils/audit.js';
+import { decodeImageDataUrl, detectImage } from '../../utils/images.js';
 import logger from '../../utils/logger.js';
 import { ASSET_FIELDS, getSettings, setAssetPath } from './settings.service.js';
 
@@ -13,30 +14,7 @@ import { ASSET_FIELDS, getSettings, setAssetPath } from './settings.service.js';
  */
 
 export const ASSET_KINDS = Object.keys(ASSET_FIELDS);
-const MAX_BYTES = 1.5 * 1024 * 1024;
 const BRANDING_DIR = path.join(env.storage.dir, 'branding');
-
-function detectImage(buffer) {
-  if (buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
-    return { ext: 'png', mime: 'image/png' };
-  }
-  if (buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return { ext: 'jpg', mime: 'image/jpeg' };
-  }
-  return null;
-}
-
-function decodeDataUrl(dataUrl) {
-  const match = /^data:image\/(png|jpe?g);base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
-  if (!match) throw ApiError.badRequest('Upload a PNG or JPEG image', { dataUrl: 'Must be a PNG or JPEG data URL' });
-  const buffer = Buffer.from(match[2], 'base64');
-  if (buffer.length === 0 || buffer.length > MAX_BYTES) {
-    throw ApiError.badRequest('Image must be smaller than 1.5 MB', { dataUrl: 'File too large' });
-  }
-  const type = detectImage(buffer);
-  if (!type) throw ApiError.badRequest('The file is not a valid PNG or JPEG image', { dataUrl: 'Unrecognised image data' });
-  return { buffer, ...type };
-}
 
 function resolveStored(relativePath) {
   const absolute = path.resolve(env.storage.dir, relativePath);
@@ -46,7 +24,7 @@ function resolveStored(relativePath) {
 
 export async function saveAsset(kind, dataUrl, user, context) {
   if (!ASSET_KINDS.includes(kind)) throw ApiError.notFound('Unknown branding asset');
-  const { buffer, ext } = decodeDataUrl(dataUrl);
+  const { buffer, ext } = decodeImageDataUrl(dataUrl);
   await fs.mkdir(BRANDING_DIR, { recursive: true });
   const fileName = `${kind}.${ext}`;
   // Remove a previous upload in the other format so only one file per kind exists.

@@ -17,6 +17,7 @@ function SubjectModal({ subject, defaultLevel, onClose, onSaved }) {
     name: subject?.name ?? '',
     code: subject?.code ?? '',
     level: subject?.level ?? defaultLevel ?? '',
+    displayOrder: subject?.displayOrder ?? 0,
     isCore: subject?.isCore ?? true,
     isActive: subject?.isActive ?? true,
   });
@@ -44,6 +45,9 @@ function SubjectModal({ subject, defaultLevel, onClose, onSaved }) {
             <option value="">Select level…</option>
             {Object.entries(LEVEL_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
+        </FormField>
+        <FormField label="Display order" error={form.errors.displayOrder} hint="Order on mark sheets and report cards (lower first)">
+          <input type="number" min={0} max={999} className="form-control mono" {...form.bind('displayOrder')} />
         </FormField>
       </div>
       <div className="button-row">
@@ -82,13 +86,14 @@ export default function SubjectsPanel() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Code</th><th>Subject</th><th>Level</th><th>Type</th><th>Status</th>
+                  <th className="numeric">Order</th><th>Code</th><th>Subject</th><th>Level</th><th>Type</th><th>Status</th>
                   <th className="actions"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
                 {subjects.map((subject) => (
                   <tr key={subject.id}>
+                    <td className="numeric">{subject.displayOrder}</td>
                     <td className="mono">{subject.code}</td>
                     <td className="data-table__primary">{subject.name}</td>
                     <td>{LEVEL_LABELS[subject.level]}</td>

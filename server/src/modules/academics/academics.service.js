@@ -14,8 +14,8 @@ const CLASS_COLUMNS = {
   classTeacherId: 'class_teacher_id',
   isActive: 'is_active',
 };
-const STREAM_COLUMNS = { streamName: 'stream_name', code: 'code', capacity: 'capacity', isActive: 'is_active' };
-const SUBJECT_COLUMNS = { name: 'name', code: 'code', level: 'level', isCore: 'is_core', isActive: 'is_active' };
+const STREAM_COLUMNS = { streamName: 'stream_name', code: 'code', capacity: 'capacity', displayOrder: 'display_order', isActive: 'is_active' };
+const SUBJECT_COLUMNS = { name: 'name', code: 'code', level: 'level', displayOrder: 'display_order', isCore: 'is_core', isActive: 'is_active' };
 
 async function assertActiveTeacher(userId, field = 'teacherId') {
   const user = await queryOne('SELECT role, status FROM users WHERE id = ?', [userId]);
@@ -35,14 +35,14 @@ const CLASS_SELECT = `SELECT c.id, c.class_name AS className, c.code, c.level, c
   LEFT JOIN users u ON u.id = c.class_teacher_id`;
 
 const STREAM_SELECT = `SELECT st.id, st.class_id AS classId, st.stream_name AS streamName, st.code, st.capacity,
-    st.is_active AS isActive,
+    st.display_order AS displayOrder, st.is_active AS isActive,
     (SELECT COUNT(*) FROM students s WHERE s.stream_id = st.id AND s.status = 'active') AS activeStudents
   FROM streams st`;
 
 async function findClass(id) {
   const row = await queryOne(`${CLASS_SELECT} WHERE c.id = ?`, [id]);
   if (!row) throw ApiError.notFound('Class not found');
-  const streams = await query(`${STREAM_SELECT} WHERE st.class_id = ? ORDER BY st.stream_name`, [id]);
+  const streams = await query(`${STREAM_SELECT} WHERE st.class_id = ? ORDER BY st.display_order, st.stream_name`, [id]);
   return { ...withBooleans(row, ['isActive']), streams: withBooleans(streams, ['isActive']) };
 }
 
@@ -58,7 +58,7 @@ export async function listClasses({ includeInactive = false } = {}) {
     ['isActive'],
   );
   const streams = withBooleans(
-    await query(`${STREAM_SELECT} ${includeInactive ? '' : 'WHERE st.is_active = 1'} ORDER BY st.stream_name`),
+    await query(`${STREAM_SELECT} ${includeInactive ? '' : 'WHERE st.is_active = 1'} ORDER BY st.display_order, st.stream_name`),
     ['isActive'],
   );
   return classes.map((cls) => ({ ...cls, streams: streams.filter((stream) => stream.classId === cls.id) }));
@@ -107,8 +107,8 @@ export async function createStream(data, context) {
   let result;
   try {
     result = await query(
-      'INSERT INTO streams (class_id, stream_name, code, capacity, is_active) VALUES (?, ?, ?, ?, ?)',
-      [data.classId, data.streamName, data.code, data.capacity ?? null, Number(data.isActive ?? true)],
+      'INSERT INTO streams (class_id, stream_name, code, capacity, display_order, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.classId, data.streamName, data.code, data.capacity ?? null, data.displayOrder ?? 0, Number(data.isActive ?? true)],
     );
   } catch (error) {
     rethrowDuplicate(error, 'This class already has a stream with that name, or the code is in use');
@@ -144,7 +144,7 @@ export async function deleteStream(id, context) {
 // Subjects
 // ---------------------------------------------------------------------------
 
-const SUBJECT_SELECT = `SELECT sub.id, sub.name, sub.code, sub.level, sub.is_core AS isCore, sub.is_active AS isActive
+const SUBJECT_SELECT = `SELECT sub.id, sub.name, sub.code, sub.level, sub.display_order AS displayOrder, sub.is_core AS isCore, sub.is_active AS isActive
   FROM subjects sub`;
 
 async function findSubject(id) {
@@ -163,7 +163,7 @@ export async function listSubjects({ level, includeInactive = false } = {}) {
   if (!includeInactive) where.push('sub.is_active = 1');
   const rows = await query(
     `${SUBJECT_SELECT} ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-     ORDER BY FIELD(sub.level, 'nursery', 'primary', 'o_level', 'a_level'), sub.is_core DESC, sub.name`,
+     ORDER BY FIELD(sub.level, 'nursery', 'primary', 'o_level', 'a_level'), sub.display_order, sub.is_core DESC, sub.name`,
     params,
   );
   return withBooleans(rows, ['isCore', 'isActive']);
@@ -173,8 +173,8 @@ export async function createSubject(data, context) {
   let result;
   try {
     result = await query(
-      'INSERT INTO subjects (name, code, level, is_core, is_active) VALUES (?, ?, ?, ?, ?)',
-      [data.name, data.code, data.level, Number(data.isCore ?? true), Number(data.isActive ?? true)],
+      'INSERT INTO subjects (name, code, level, display_order, is_core, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.name, data.code, data.level, data.displayOrder ?? 0, Number(data.isCore ?? true), Number(data.isActive ?? true)],
     );
   } catch (error) {
     rethrowDuplicate(error, 'A subject with this code, or this name at the same level, already exists');
@@ -248,7 +248,7 @@ export async function listAssignments({ academicYearId, teacherId, classId, subj
   }
   return query(
     `${ASSIGNMENT_SELECT} WHERE ${where.join(' AND ')}
-     ORDER BY ${LEVEL_ORDER}, c.sort_order, st.stream_name, sub.name`,
+     ORDER BY ${LEVEL_ORDER}, c.sort_order, st.display_order, st.stream_name, sub.display_order, sub.name`,
     params,
   );
 }

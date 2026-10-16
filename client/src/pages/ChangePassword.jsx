@@ -6,6 +6,7 @@ import PageHeader from '../components/ui/PageHeader.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useForm } from '../hooks/useForm.js';
+import { useTranslation } from 'react-i18next';
 
 const RULES = [
   { label: 'At least 8 characters', test: (value) => value.length >= 8 },
@@ -16,6 +17,7 @@ const RULES = [
 ];
 
 export default function ChangePassword() {
+  const { t } = useTranslation();
   const { user, changePassword } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function ChangePassword() {
 
   return (
     <div className="narrow-page">
-      <PageHeader eyebrow="My account" title="Change password" subtitle="Changing your password signs you out of all other devices." />
+      <PageHeader eyebrow={t('pages.password.eyebrow')} title={t('pages.password.title')} subtitle={t('pages.password.subtitle')} />
 
       {user.mustChangePassword && (
         <InlineAlert tone="warning" title="Temporary password in use" icon={KeyRound}>

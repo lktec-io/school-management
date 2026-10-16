@@ -10,6 +10,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { downloadReceipt } from '../../utils/finance.js';
 import { EXPENSE_CATEGORY_LABELS, PAYMENT_MODE_LABELS, formatDate, formatMoney, formatNumber, formatPercent } from '../../utils/format.js';
 import RecordPaymentModal from './RecordPaymentModal.jsx';
+import { useTranslation } from 'react-i18next';
 
 function MoneyTile({ label, value, meta, icon: Icon, tone }) {
   return (
@@ -40,6 +41,7 @@ function DailyChart({ days }) {
 }
 
 export default function FinanceOverview() {
+  const { t } = useTranslation();
   const { data, error, loading, reload } = useApi('/finance/overview');
   const summary = useApi('/finance/summary');
   const smsBalance = useApi('/sms/balance');
@@ -55,9 +57,9 @@ export default function FinanceOverview() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow={data?.term ? `${data.term.termName} · ${data.term.yearLabel}` : 'Finance'}
-        title="Finance overview"
-        subtitle="Collections, arrears and expenditure for the current term."
+        eyebrow={data?.term ? `${data.term.termName} · ${data.term.yearLabel}` : t('nav.sections.finance')}
+        title={t('pages.finance.title')}
+        subtitle={t('pages.finance.subtitle')}
         actions={(
           <>
             <Link to="/finance/defaulters" className="btn btn--outline"><Users size={16} aria-hidden="true" /> Defaulters</Link>

@@ -1,12 +1,14 @@
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Accessible modal dialog: Escape closes, focus moves into the dialog on open and
  * returns to the previously focused element on close, page scroll is locked.
  */
 export default function Modal({ title, onClose, children, footer, size = 'md', closeDisabled = false }) {
+  const { t } = useTranslation();
   const titleId = useId();
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -58,7 +60,7 @@ export default function Modal({ title, onClose, children, footer, size = 'md', c
             className="btn btn--ghost btn--icon btn--sm"
             onClick={onClose}
             disabled={closeDisabled}
-            aria-label="Close dialog"
+            aria-label={t('common.closeDialog')}
             data-close
           >
             <X size={16} />

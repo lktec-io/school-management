@@ -1,6 +1,6 @@
 import { FileSpreadsheet, MessageSquareWarning, Receipt, Search, UserCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import SmsComposeModal from '../../components/sms/SmsComposeModal.jsx';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/ui/Feedback.jsx';
@@ -14,11 +14,17 @@ import { downloadCsv } from '../../utils/finance.js';
 import { classLabel, formatDate, formatMoney, formatPhone } from '../../utils/format.js';
 import { FEE_REMINDER_TEMPLATE } from '../../utils/sms.js';
 import RecordPaymentModal from './RecordPaymentModal.jsx';
+import { useTranslation } from 'react-i18next';
 
 export default function FeeDefaulters() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { term } = useAcademicPeriod();
-  const [filters, setFilters] = useState({ termId: term ? String(term.id) : '', classId: '', streamId: '', minBalance: '', search: '', page: 1 });
+  const [params] = useSearchParams();
+  // Dashboard charts link here with ?classId= to open one class's defaulters.
+  const [filters, setFilters] = useState({
+    termId: term ? String(term.id) : '', classId: params.get('classId') || '', streamId: '', minBalance: '', search: '', page: 1,
+  });
   const [searchInput, setSearchInput] = useState('');
   const [selected, setSelected] = useState(() => new Set());
   const [modal, setModal] = useState(null);
@@ -60,9 +66,9 @@ export default function FeeDefaulters() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Finance"
-        title="Fee defaulters"
-        subtitle="Students with an unpaid balance for the selected term, largest debt first."
+        eyebrow={t('nav.sections.finance')}
+        title={t('pages.defaulters.title')}
+        subtitle={t('pages.defaulters.subtitle')}
         actions={(
           <>
             <button type="button" className="btn btn--outline" onClick={exportCsv} disabled={!data?.items.length || pending === 'csv'}>

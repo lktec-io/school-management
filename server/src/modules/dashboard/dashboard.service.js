@@ -5,6 +5,7 @@ import { teacherClassIds } from '../academics/access.service.js';
 import { getCurrentPeriod } from '../academics/calendar.service.js';
 import { computeClassResults, findExam } from '../exams/exams.service.js';
 import { computeTermBalances } from '../finance/balances.service.js';
+import { studentPhotoUrl } from '../students/students.service.js';
 
 async function latestExamWithMarks(statuses) {
   const row = await queryOne(
@@ -133,8 +134,20 @@ async function monthlySeries(months = 6) {
   return series;
 }
 
+/** Confirmed collections per payment mode for the term (donut chart). */
+async function paymentModes(term) {
+  if (!term) return [];
+  const rows = await query(
+    `SELECT payment_mode AS mode, COUNT(*) AS payments, SUM(amount_paid) AS amount
+       FROM fee_payments WHERE term_id = ? AND status = 'confirmed'
+      GROUP BY payment_mode ORDER BY amount DESC`,
+    [term.id],
+  );
+  return rows.map((row) => ({ ...row, amount: Number(row.amount) }));
+}
+
 async function adminSummary(period) {
-  const [counts, byClass, statusRows, latestExam, fees, finance] = await Promise.all([
+  const [counts, byClass, statusRows, latestExam, fees, finance, staffRows, monthly, modes] = await Promise.all([
     queryOne(
       `SELECT
          (SELECT COUNT(*) FROM students WHERE status = 'active') AS activeStudents,
@@ -148,7 +161,8 @@ async function adminSummary(period) {
       [period.academicYear?.startDate ?? '9999-12-31'],
     ),
     query(
-      `SELECT c.id AS classId, c.class_name AS className, c.level, COUNT(s.id) AS students
+      `SELECT c.id AS classId, c.class_name AS className, c.level, COUNT(s.id) AS students,
+              SUM(s.gender = 'male') AS male, SUM(s.gender = 'female') AS female
          FROM classes c
          LEFT JOIN students s ON s.class_id = c.id AND s.status = 'active'
         WHERE c.is_active = 1
@@ -159,10 +173,16 @@ async function adminSummary(period) {
     latestExamWithMarks(['open', 'closed', 'published']),
     feeSnapshot(period.term),
     classFinance(period.term),
+    query("SELECT role, COUNT(*) AS total FROM users WHERE status = 'active' GROUP BY role"),
+    monthlySeries(6),
+    paymentModes(period.term),
   ]);
   return {
     metrics: counts,
-    studentsByClass: byClass,
+    studentsByClass: byClass.map((row) => ({ ...row, male: Number(row.male ?? 0), female: Number(row.female ?? 0) })),
+    staffByRole: Object.fromEntries(staffRows.map((row) => [row.role, row.total])),
+    monthly,
+    paymentModes: modes,
     statusBreakdown: Object.fromEntries(statusRows.map((row) => [row.status, row.total])),
     performance: latestExam ? await examPerformance(latestExam) : null,
     fees,
@@ -182,7 +202,7 @@ async function teacherSummary(user, period) {
            JOIN classes c ON c.id = ta.class_id
            LEFT JOIN streams st ON st.id = ta.stream_id
           WHERE ta.teacher_id = ? AND ta.academic_year_id = ?
-          ORDER BY c.sort_order, st.stream_name, sub.name`,
+          ORDER BY c.sort_order, st.display_order, st.stream_name, sub.display_order, sub.name`,
         [user.id, period.academicYear.id],
       )
       : [],
@@ -215,7 +235,7 @@ async function teacherSummary(user, period) {
        JOIN subjects sub ON sub.id = ta.subject_id
        LEFT JOIN streams st ON st.id = ta.stream_id
       WHERE ta.teacher_id = ?
-      ORDER BY e.id DESC, c.sort_order, st.stream_name, sub.name`,
+      ORDER BY e.id DESC, c.sort_order, st.display_order, st.stream_name, sub.display_order, sub.name`,
     [user.id],
   );
   const pendingMarks = pendingRows
@@ -259,7 +279,7 @@ async function teacherSummary(user, period) {
 
 async function accountantSummary(period) {
   const monthStart = `${todayInSchoolTz().slice(0, 7)}-01`;
-  const [counts, fees, monthly, monthTotals, recentPayments, defaulters] = await Promise.all([
+  const [counts, fees, monthly, monthTotals, recentPayments, defaulters, modes, finance] = await Promise.all([
     queryOne(`SELECT (SELECT COUNT(*) FROM students WHERE status = 'active') AS activeStudents,
                      (SELECT COUNT(*) FROM classes WHERE is_active = 1) AS activeClasses`),
     feeSnapshot(period.term),
@@ -277,6 +297,8 @@ async function accountantSummary(period) {
         ORDER BY fp.id DESC LIMIT 6`,
     ),
     period.term ? computeTermBalances(period.term.id) : Promise.resolve([]),
+    paymentModes(period.term),
+    classFinance(period.term),
   ]);
   const owing = defaulters.filter((row) => row.balance > 0);
   return {
@@ -284,6 +306,8 @@ async function accountantSummary(period) {
     fees,
     monthly,
     thisMonth: { income: Number(monthTotals.income), expenses: Number(monthTotals.expenses) },
+    paymentModes: modes,
+    classFinance: finance,
     unpaid: {
       students: owing.length,
       amount: round(owing.reduce((sum, row) => sum + row.balance, 0)),
@@ -298,7 +322,7 @@ async function accountantSummary(period) {
 async function parentSummary(user, period) {
   const children = await query(
     `SELECT s.id, s.registration_number AS registrationNumber, s.first_name AS firstName, s.middle_name AS middleName,
-            s.last_name AS lastName, s.status, c.class_name AS className, st.stream_name AS streamName
+            s.last_name AS lastName, s.status, s.photo_path AS photoPath, c.class_name AS className, st.stream_name AS streamName
        FROM students s
        JOIN classes c ON c.id = s.class_id
        LEFT JOIN streams st ON st.id = s.stream_id
@@ -348,12 +372,13 @@ async function parentSummary(user, period) {
     paymentsByStudent.set(row.studentId, list);
   }
 
-  const mapped = children.map((child) => {
+  const mapped = children.map(({ photoPath, ...child }) => {
     const balance = balanceByStudent.get(child.id);
     const reports = reportsByStudent.get(child.id) ?? [];
     return {
       ...child,
       fullName: [child.firstName, child.middleName, child.lastName].filter(Boolean).join(' '),
+      photoUrl: studentPhotoUrl(child.id, photoPath),
       latestReport: reports[0] ?? null,
       reports,
       payments: paymentsByStudent.get(child.id) ?? [],

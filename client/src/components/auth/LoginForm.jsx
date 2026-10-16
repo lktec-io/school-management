@@ -1,13 +1,12 @@
 import { CircleAlert, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useForm } from '../../hooks/useForm.js';
 
-/**
- * Government-style sign-in form (sharp edges, high contrast). `copy` holds the localised labels;
- * `onSuccess(user)` runs after a successful sign-in.
- */
-export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
+/** Sign-in form; `onSuccess(user)` runs after a successful sign-in. */
+export default function LoginForm({ onSuccess, autoFocus = true }) {
+  const { t, i18n } = useTranslation();
   const { login } = useAuth();
   const id = useId();
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +19,8 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
     } catch (error) {
       // Translate known sign-in failures by the server's error code (never by HTTP status alone:
       // a 403 can mean an inactive account or a rejected origin). Unknown errors keep the server text.
-      const localized = copy.errors?.[error.code];
+      const key = `login.errors.${error.code}`;
+      const localized = error.code && i18n.exists(key) ? t(key) : null;
       if (localized && !error.details) error.message = localized;
       throw error;
     }
@@ -39,7 +39,7 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
       )}
 
       <div className="gov-field">
-        <label className="gov-label" htmlFor={`${id}-identifier`}>{copy.identifier}</label>
+        <label className="gov-label" htmlFor={`${id}-identifier`}>{t('login.identifier')}</label>
         <input
           id={`${id}-identifier`}
           name="identifier"
@@ -56,7 +56,7 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
       </div>
 
       <div className="gov-field">
-        <label className="gov-label" htmlFor={`${id}-password`}>{copy.password}</label>
+        <label className="gov-label" htmlFor={`${id}-password`}>{t('login.password')}</label>
         <div className="gov-input-group">
           <input
             id={`${id}-password`}
@@ -73,7 +73,7 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
             type="button"
             className="gov-input-group__toggle"
             onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? copy.hide : copy.show}
+            aria-label={showPassword ? t('login.hide') : t('login.show')}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -83,10 +83,10 @@ export default function LoginForm({ copy, onSuccess, autoFocus = true }) {
 
       <button type="submit" className="gov-btn gov-btn--primary gov-btn--block" disabled={submitting}>
         {submitting ? <span className="spinner spinner--light" aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />}
-        {submitting ? copy.submitting : copy.submit}
+        {submitting ? t('login.submitting') : t('login.submit')}
       </button>
 
-      <p className="gov-form__note">{copy.forgot}</p>
+      <p className="gov-form__note">{t('login.forgot')}</p>
     </form>
   );
 }

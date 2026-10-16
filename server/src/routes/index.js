@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import env from '../config/env.js';
 import { pingDatabase } from '../config/db.js';
 import { authenticate, requirePasswordChanged } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
@@ -34,6 +35,8 @@ router.get('/school', asyncHandler(async (req, res) => {
       name, motto, address, phone, email, website, registrationNo, headmasterName, vision, mission,
       hasLogo: branding.assets.logo.uploaded || Boolean(branding.assets.logo.fromEnv),
       logoVersion: branding.version,
+      // Printed on every report card and receipt; shown as a preview when registering students.
+      regNumberPrefix: env.school.regNumberPrefix,
     },
   });
 }));

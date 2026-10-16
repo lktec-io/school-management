@@ -43,6 +43,7 @@ export function validateStream(body, { partial = false } = {}) {
     .string('streamName', { required: true, max: 30 })
     .string('code', { required: true, max: 20, pattern: CODE_PATTERN, patternMessage: CODE_MESSAGE, transform: upper })
     .integer('capacity', { min: 1, max: 500 })
+    .integer('displayOrder', { min: 0, max: 999 })
     .boolean('isActive')
     .result();
 }
@@ -52,6 +53,7 @@ export function validateSubject(body, { partial = false } = {}) {
     .string('name', { required: true, max: 80 })
     .string('code', { required: true, max: 20, pattern: CODE_PATTERN, patternMessage: CODE_MESSAGE, transform: upper })
     .oneOf('level', LEVELS, { required: true })
+    .integer('displayOrder', { min: 0, max: 999 })
     .boolean('isCore')
     .boolean('isActive')
     .result();

@@ -65,7 +65,7 @@ async function loadStudents(where, params) {
        JOIN classes c ON c.id = s.class_id
        LEFT JOIN streams st ON st.id = s.stream_id
       WHERE ${where}
-      ORDER BY c.sort_order, st.stream_name, s.first_name`,
+      ORDER BY c.sort_order, st.display_order, st.stream_name, s.first_name`,
     params,
   );
 }

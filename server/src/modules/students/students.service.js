@@ -1,3 +1,4 @@
+import path from 'node:path';
 import env from '../../config/env.js';
 import { query, queryOne, withTransaction } from '../../config/db.js';
 import { ApiError } from '../../middleware/errorHandler.js';
@@ -44,7 +45,7 @@ const STUDENT_SELECT = `SELECT s.id, s.registration_number AS registrationNumber
     s.stream_id AS streamId, st.stream_name AS streamName,
     s.parent_name AS parentName, s.parent_phone AS parentPhone,
     s.parent_user_id AS parentUserId, pu.full_name AS parentAccountName,
-    s.address, s.admission_date AS admissionDate, s.status,
+    s.address, s.admission_date AS admissionDate, s.status, s.photo_path AS photoPath,
     s.created_at AS createdAt, s.updated_at AS updatedAt
   FROM students s
   JOIN classes c ON c.id = s.class_id
@@ -62,7 +63,18 @@ export function fullName(student) {
   return [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ');
 }
 
-const decorate = (student) => ({ ...student, fullName: fullName(student) });
+/** API-relative photo URL (client prefixes the API base); the file name changes per upload, so it doubles as a cache-buster. */
+export function studentPhotoUrl(id, photoPath) {
+  if (!photoPath) return null;
+  const version = path.posix.basename(photoPath).replace(/\.[a-z]+$/, '');
+  return `/students/${id}/photo?v=${encodeURIComponent(version)}`;
+}
+
+const decorate = ({ photoPath, ...student }) => ({
+  ...student,
+  fullName: fullName(student),
+  photoUrl: studentPhotoUrl(student.id, photoPath),
+});
 
 /** Row-level visibility: teachers see their classes, parents see their own children. */
 async function scopeFor(user) {
@@ -80,6 +92,14 @@ async function findStudent(id, executor) {
   const row = await queryOne(`${STUDENT_SELECT} WHERE s.id = ?`, [id], executor);
   if (!row) throw ApiError.notFound('Student not found');
   return decorate(row);
+}
+
+/** Stored photo path of a student the user may see (404 otherwise). */
+export async function visiblePhotoPath(id, user) {
+  const scope = await scopeFor(user);
+  const row = await queryOne(`SELECT s.photo_path AS photoPath FROM students s WHERE s.id = ? AND ${scope.sql}`, [id, ...scope.params]);
+  if (!row) throw ApiError.notFound('Student not found');
+  return row.photoPath;
 }
 
 async function findVisibleStudent(id, user) {
@@ -117,7 +137,7 @@ async function assertParentAccount(parentUserId) {
   }
 }
 
-export async function listStudents({ classId, streamId, status, search, sort = 'name', dir = 'asc' }, pagination, user) {
+export async function listStudents({ classId, streamId, status, gender, search, sort = 'name', dir = 'asc' }, pagination, user) {
   const scope = await scopeFor(user);
   const where = [scope.sql];
   const params = [...scope.params];
@@ -132,6 +152,10 @@ export async function listStudents({ classId, streamId, status, search, sort = '
   if (status) {
     where.push('s.status = ?');
     params.push(status);
+  }
+  if (gender) {
+    where.push('s.gender = ?');
+    params.push(gender);
   }
   if (search) {
     const term = likeContains(search);
@@ -338,4 +362,9 @@ export async function getStudentProfile(id, user) {
     performance,
     fees,
   };
+}
+
+/** A single student record (admin context, no scoping). */
+export function getStudentRecord(id) {
+  return findStudent(id);
 }

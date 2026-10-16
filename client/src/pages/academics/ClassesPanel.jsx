@@ -46,7 +46,7 @@ function ClassModal({ cls, teachers, onClose, onSaved }) {
             {Object.entries(LEVEL_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </FormField>
-        <FormField label="Display order" error={form.errors.sortOrder}>
+        <FormField label="Display order" error={form.errors.sortOrder} hint="Lower numbers are listed first">
           <input type="number" min={0} max={999} className="form-control mono" {...form.bind('sortOrder')} />
         </FormField>
         <FormField label="Class teacher" error={form.errors.classTeacherId} className="span-2" hint="Writes class teacher remarks on report cards">
@@ -71,6 +71,7 @@ function StreamModal({ cls, stream, onClose, onSaved }) {
     streamName: stream?.streamName ?? '',
     code: stream?.code ?? '',
     capacity: stream?.capacity ?? '',
+    displayOrder: stream?.displayOrder ?? 0,
     isActive: stream?.isActive ?? true,
   });
   return (
@@ -94,6 +95,9 @@ function StreamModal({ cls, stream, onClose, onSaved }) {
         </FormField>
         <FormField label="Capacity" error={form.errors.capacity} hint="Optional">
           <input type="number" min={1} max={500} className="form-control mono" {...form.bind('capacity')} />
+        </FormField>
+        <FormField label="Display order" error={form.errors.displayOrder} hint="Lower numbers are listed first">
+          <input type="number" min={0} max={999} className="form-control mono" {...form.bind('displayOrder')} />
         </FormField>
       </div>
       {stream && (

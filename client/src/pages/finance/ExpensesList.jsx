@@ -13,6 +13,7 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { useForm } from '../../hooks/useForm.js';
 import { EXPENSE_CATEGORY_LABELS, PAYMENT_MODE_LABELS, formatDate, formatMoney, todayIso } from '../../utils/format.js';
+import { useTranslation } from 'react-i18next';
 
 function ExpenseModal({ onClose, onSaved }) {
   const toast = useToast();
@@ -63,6 +64,7 @@ function ExpenseModal({ onClose, onSaved }) {
 }
 
 export default function ExpensesList() {
+  const { t } = useTranslation();
   const toast = useToast();
   const [filters, setFilters] = useState({ category: '', status: 'recorded', dateFrom: '', dateTo: '', search: '', page: 1 });
   const [searchInput, setSearchInput] = useState('');
@@ -80,9 +82,9 @@ export default function ExpensesList() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Finance"
-        title="Expenses"
-        subtitle="Operational expenditure. Entries are voided with a reason, never deleted."
+        eyebrow={t('nav.sections.finance')}
+        title={t('pages.expenses.title')}
+        subtitle={t('pages.expenses.subtitle')}
         actions={(
           <button type="button" className="btn btn--primary" onClick={() => setModal({ type: 'create' })}>
             <Plus size={16} aria-hidden="true" /> Record expense

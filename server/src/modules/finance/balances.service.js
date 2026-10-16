@@ -60,7 +60,7 @@ export async function computeTermBalances(termId, { studentIds, classId, streamI
        JOIN classes c ON c.id = s.class_id
        LEFT JOIN streams st ON st.id = s.stream_id
       ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-      ORDER BY c.sort_order, st.stream_name, s.first_name, s.last_name`,
+      ORDER BY c.sort_order, st.display_order, st.stream_name, s.first_name, s.last_name`,
     params,
   );
   if (students.length === 0) return [];
@@ -74,7 +74,7 @@ export async function computeTermBalances(termId, { studentIds, classId, streamI
               fs.amount, fs.is_mandatory AS isMandatory
          FROM fee_structures fs JOIN fee_types ft ON ft.id = fs.fee_type_id
         WHERE fs.term_id = ?
-        ORDER BY fs.is_mandatory DESC, ft.name`,
+        ORDER BY fs.is_mandatory DESC, ft.display_order, ft.name`,
       [termId],
     ),
     query(

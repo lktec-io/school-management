@@ -8,7 +8,7 @@ import { findTerm } from './balances.service.js';
 // Fee types
 // ---------------------------------------------------------------------------
 
-const FEE_TYPE_SELECT = `SELECT ft.id, ft.name, ft.code, ft.description, ft.is_active AS isActive,
+const FEE_TYPE_SELECT = `SELECT ft.id, ft.name, ft.code, ft.description, ft.display_order AS displayOrder, ft.is_active AS isActive,
     (SELECT COUNT(*) FROM fee_structures fs WHERE fs.fee_type_id = ft.id) AS structures
   FROM fee_types ft`;
 
@@ -19,7 +19,7 @@ async function findFeeType(id) {
 }
 
 export async function listFeeTypes({ includeInactive = false } = {}) {
-  const rows = await query(`${FEE_TYPE_SELECT} ${includeInactive ? '' : 'WHERE ft.is_active = 1'} ORDER BY ft.name`);
+  const rows = await query(`${FEE_TYPE_SELECT} ${includeInactive ? '' : 'WHERE ft.is_active = 1'} ORDER BY ft.display_order, ft.name`);
   return withBooleans(rows, ['isActive']);
 }
 
@@ -27,8 +27,8 @@ export async function createFeeType(data, context) {
   let result;
   try {
     result = await query(
-      'INSERT INTO fee_types (name, code, description, is_active) VALUES (?, ?, ?, ?)',
-      [data.name, data.code, data.description ?? null, Number(data.isActive ?? true)],
+      'INSERT INTO fee_types (name, code, description, display_order, is_active) VALUES (?, ?, ?, ?, ?)',
+      [data.name, data.code, data.description ?? null, data.displayOrder ?? 0, Number(data.isActive ?? true)],
     );
   } catch (error) {
     rethrowDuplicate(error, 'A fee type with this name or code already exists');
@@ -39,7 +39,7 @@ export async function createFeeType(data, context) {
 
 export async function updateFeeType(id, data, context) {
   const before = await findFeeType(id);
-  const { sets, params } = buildUpdateSet(data, { name: 'name', code: 'code', description: 'description', isActive: 'is_active' });
+  const { sets, params } = buildUpdateSet(data, { name: 'name', code: 'code', description: 'description', displayOrder: 'display_order', isActive: 'is_active' });
   try {
     await query(`UPDATE fee_types SET ${sets.join(', ')} WHERE id = ?`, [...params, id]);
   } catch (error) {
@@ -88,7 +88,7 @@ export async function listStructures({ termId, classId }) {
   }
   const rows = await query(
     `${STRUCTURE_SELECT} WHERE ${where.join(' AND ')}
-     ORDER BY FIELD(c.level, 'nursery', 'primary', 'o_level', 'a_level'), c.sort_order, fs.is_mandatory DESC, ft.name`,
+     ORDER BY FIELD(c.level, 'nursery', 'primary', 'o_level', 'a_level'), c.sort_order, fs.is_mandatory DESC, ft.display_order, ft.name`,
     params,
   );
   return rows.map(decorateStructure);
@@ -185,7 +185,7 @@ export async function listAllocations(structureId) {
        LEFT JOIN streams st ON st.id = s.stream_id
        LEFT JOIN student_fee_allocations a ON a.student_id = s.id AND a.fee_structure_id = ?
       WHERE s.class_id = ? AND (s.status IN ('active', 'suspended') OR a.id IS NOT NULL)
-      ORDER BY st.stream_name, s.first_name, s.last_name`,
+      ORDER BY st.display_order, st.stream_name, s.first_name, s.last_name`,
     [structureId, structure.classId],
   );
   return {

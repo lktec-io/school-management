@@ -1,5 +1,6 @@
 import { Copy, KeyRound, Pencil, Search, UserPlus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import FormField from '../../components/ui/FormField.jsx';
 import FormModal from '../../components/ui/FormModal.jsx';
@@ -14,6 +15,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { ROLE_LABELS, formatDateTime, formatPhone } from '../../utils/format.js';
+import { useTranslation } from 'react-i18next';
 
 function UserModal({ user, onClose, onSaved }) {
   const { user: me } = useAuth();
@@ -107,9 +109,11 @@ function TemporaryPasswordModal({ result, onClose }) {
 }
 
 export default function UserManagement() {
+  const { t } = useTranslation();
   const { user: me } = useAuth();
   const toast = useToast();
-  const [filters, setFilters] = useState({ role: '', status: '', search: '', page: 1 });
+  const [params] = useSearchParams();
+  const [filters, setFilters] = useState(() => ({ role: params.get('role') || '', status: '', search: '', page: 1 }));
   const [searchInput, setSearchInput] = useState('');
   const [modal, setModal] = useState(null);
   const { run, pending } = useAsyncAction();
@@ -131,9 +135,9 @@ export default function UserManagement() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Administration"
-        title="User accounts"
-        subtitle="Create and manage accounts for the Headmaster, Bursar, teachers and parents."
+        eyebrow={t('nav.sections.administration')}
+        title={t('pages.users.title')}
+        subtitle={t('pages.users.subtitle')}
         actions={(
           <button type="button" className="btn btn--primary" onClick={() => setModal({ type: 'edit' })}>
             <UserPlus size={16} aria-hidden="true" /> New account

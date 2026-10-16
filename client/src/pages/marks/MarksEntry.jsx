@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { EXAM_TYPE_LABELS, LEVEL_LABELS, formatNumber } from '../../utils/format.js';
 import ClassResults from './ClassResults.jsx';
 import MarksGrid from './MarksGrid.jsx';
+import { useTranslation } from 'react-i18next';
 
 const VIEWS = [
   { id: 'entry', label: 'Enter marks', icon: NotebookPen },
@@ -34,6 +35,7 @@ function SaveSummary({ summary }) {
 }
 
 export default function MarksEntry() {
+  const { t } = useTranslation();
   const { hasRole } = useAuth();
   const isTeacher = hasRole('teacher');
   const [params, setParams] = useSearchParams();
@@ -80,9 +82,9 @@ export default function MarksEntry() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Examinations"
-        title="Marks entry"
-        subtitle="Select an examination and class, then enter scores. Grades, totals, averages and positions update automatically."
+        eyebrow={t('pages.marks.eyebrow')}
+        title={t('pages.marks.title')}
+        subtitle={t('pages.marks.subtitle')}
       />
 
       <div className="filter-bar card">

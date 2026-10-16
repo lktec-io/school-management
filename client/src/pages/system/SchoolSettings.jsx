@@ -1,8 +1,9 @@
-import { DatabaseBackup, Download, HardDrive, ImageUp, Save, Server, Trash2 } from 'lucide-react';
+import { ImageUp, Save, Trash2 } from 'lucide-react';
 import { useRef } from 'react';
-import { api, apiUrl, saveBlob } from '../../api/client.js';
+import { useTranslation } from 'react-i18next';
+import { api, apiUrl } from '../../api/client.js';
 import FormField from '../../components/ui/FormField.jsx';
-import { ErrorBlock, InlineAlert, LoadingBlock } from '../../components/ui/Feedback.jsx';
+import { ErrorBlock, InlineAlert, PageSkeleton } from '../../components/ui/Feedback.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 import { StatusBadge } from '../../components/ui/StatusBadge.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -10,7 +11,6 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { refreshSchoolProfile } from '../../hooks/useSchoolProfile.js';
-import { formatDateTime, formatNumber } from '../../utils/format.js';
 import AnnouncementsCard from './AnnouncementsCard.jsx';
 
 const ASSETS = [
@@ -20,13 +20,6 @@ const ASSETS = [
   { kind: 'bursar_signature', label: "Bursar's signature", hint: 'Printed on payment receipts' },
 ];
 const MAX_BYTES = 1.5 * 1024 * 1024;
-
-function formatBytes(bytes) {
-  if (!bytes) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${formatNumber(bytes / 1024 ** index, 1)} ${units[index]}`;
-}
 
 function readAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -164,79 +157,14 @@ function AssetTile({ asset, status, version, onChanged }) {
   );
 }
 
-function BackupsCard() {
-  const backups = useApi('/system/backups');
-  const info = useApi('/system/info');
-  const { run, pending } = useAsyncAction();
-
-  const downloadNow = () => run('backup', async () => {
-    const blob = await api.postBlob('/system/backup');
-    const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
-    saveBlob(blob, `school-backup-${stamp}.sql.gz`);
-    info.reload();
-  }, 'Backup downloaded. Store it somewhere safe, off this server.');
-
-  const downloadStored = (fileName) => run(fileName, async () => {
-    saveBlob(await api.blob(`/system/backups/${encodeURIComponent(fileName)}`), fileName);
-  });
-
-  return (
-    <section className="card">
-      <div className="card__header">
-        <h2 className="card__title"><DatabaseBackup size={16} aria-hidden="true" className="inline-icon" /> Backups</h2>
-      </div>
-      <div className="card__body stack">
-        <p className="text-sm text-muted">
-          A compressed copy of the whole database is made automatically every night at 02:30. Download one now before term changes or major edits.
-        </p>
-        <button type="button" className="btn btn--primary" onClick={downloadNow} disabled={pending === 'backup'}>
-          {pending === 'backup' ? <span className="spinner spinner--light" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
-          {pending === 'backup' ? 'Creating backup…' : 'Download backup now (.sql.gz)'}
-        </button>
-        {backups.error && <ErrorBlock error={backups.error} />}
-        <div>
-          <div className="eyebrow">Stored daily backups</div>
-          <ul className="doc-list">
-            {backups.data?.items.length === 0 && <li className="text-muted">No stored backups yet — the nightly job writes them to <span className="mono">{backups.data.directory}</span>.</li>}
-            {(backups.data?.items ?? []).slice(0, 10).map((item) => (
-              <li key={item.fileName}>
-                <span>
-                  <span className="mono text-xs">{item.fileName}</span>
-                  <span className="data-table__secondary">{formatDateTime(item.createdAt)} · <span className="mono">{formatBytes(item.bytes)}</span></span>
-                </span>
-                <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Download ${item.fileName}`}
-                  disabled={pending === item.fileName} onClick={() => downloadStored(item.fileName)}>
-                  <Download size={15} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      {info.data && (
-        <div className="card__footer">
-          <div className="eyebrow"><Server size={12} aria-hidden="true" className="inline-icon" />System health</div>
-          <dl className="definition-list text-sm">
-            <dt>Database</dt><dd><span className="mono">{info.data.database.name}</span> · MySQL <span className="mono">{info.data.database.version}</span></dd>
-            <dt>Database size</dt><dd className="mono">{formatBytes(info.data.database.bytes)} · {info.data.database.tables} tables</dd>
-            <dt>Last stored backup</dt><dd className="mono">{info.data.lastBackup ? formatDateTime(info.data.lastBackup.createdAt) : 'None yet'}</dd>
-            <dt>SMS gateway</dt><dd>{info.data.smsConfigured ? <StatusBadge status="active" label="Configured" /> : <StatusBadge status="failed" label="Not configured" />}</dd>
-            <dt>Server</dt><dd className="mono">{info.data.hostname} · Node {info.data.nodeVersion} · up {Math.floor(info.data.uptimeSeconds / 3600)}h</dd>
-            <dt><HardDrive size={12} aria-hidden="true" className="inline-icon" />Storage</dt><dd className="mono text-xs">{info.data.storageDir}</dd>
-          </dl>
-        </div>
-      )}
-    </section>
-  );
-}
-
 export default function SchoolSettings() {
+  const { t } = useTranslation();
   const { data, error, loading, reload } = useApi('/system/settings');
 
   return (
     <div className="stack-lg">
-      <PageHeader eyebrow="Administration" title="School settings" subtitle="Official school details, branding for documents, and database backups." />
-      {loading && !data && <LoadingBlock />}
+      <PageHeader eyebrow={t('nav.sections.administration')} title={t('pages.settings.title')} subtitle={t('pages.settings.subtitle')} />
+      {loading && !data && <PageSkeleton />}
       <ErrorBlock error={error} onRetry={reload} />
       {data && (
         <div className="settings-layout">
@@ -262,7 +190,6 @@ export default function SchoolSettings() {
           </div>
           <div className="stack">
             <AnnouncementsCard />
-            <BackupsCard />
           </div>
         </div>
       )}

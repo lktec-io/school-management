@@ -6,6 +6,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { formatNumber } from '../../utils/format.js';
 import BroadcastPanel from './BroadcastPanel.jsx';
 import SmsLogsPanel from './SmsLogsPanel.jsx';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
   { id: 'broadcast', label: 'Broadcast SMS', icon: Send },
@@ -13,6 +14,7 @@ const TABS = [
 ];
 
 export default function SmsCenter() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const active = params.get('tab') === 'logs' ? 'logs' : 'broadcast';
   const batchId = params.get('batch') || undefined;
@@ -21,9 +23,9 @@ export default function SmsCenter() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Communication"
-        title="SMS Center"
-        subtitle="Send announcements, fee reminders and results to parents through Beem Africa."
+        eyebrow={t('nav.sections.communication')}
+        title={t('pages.sms.title')}
+        subtitle={t('pages.sms.subtitle')}
         actions={(
           <span className="balance-pill" title="Live Beem Africa credit balance">
             <MessageSquareText size={16} aria-hidden="true" />

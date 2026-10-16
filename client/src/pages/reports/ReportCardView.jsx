@@ -13,6 +13,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { classLabel } from '../../utils/format.js';
 import ReportCardPaper from './ReportCardPaper.jsx';
+import { useTranslation } from 'react-i18next';
 
 const fileNameFor = (...parts) => `${parts.filter(Boolean).join('-').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()}.pdf`;
 
@@ -122,6 +123,7 @@ function ClassBatchDownload() {
 }
 
 export default function ReportCardView() {
+  const { t } = useTranslation();
   const { hasRole } = useAuth();
   const isParent = hasRole('parent');
   const isStaff = hasRole('admin', 'teacher');
@@ -176,9 +178,9 @@ export default function ReportCardView() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Examinations"
-        title="Report cards"
-        subtitle={isParent ? 'View and download your children’s published report cards.' : 'Preview, annotate and print official report cards.'}
+        eyebrow={t('pages.marks.eyebrow')}
+        title={t('pages.reports.title')}
+        subtitle={isParent ? t('pages.reports.subtitleParent') : t('pages.reports.subtitleStaff')}
       />
 
       <div className="filter-bar card">

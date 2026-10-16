@@ -1,13 +1,21 @@
 import { ShieldAlert } from 'lucide-react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { progress } from '../../utils/progress.js';
 import { EmptyState } from '../ui/Feedback.jsx';
 
+/** Blank shell while the session is restored; the top progress bar shows activity. */
 export function FullPageLoader() {
+  const { t } = useTranslation();
+  useEffect(() => {
+    progress.start();
+    return () => progress.done();
+  }, []);
   return (
     <div className="full-page-loader" role="status">
-      <span className="spinner" aria-hidden="true" />
-      <span>Loading portal…</span>
+      <span className="sr-only">{t('common.loadingPortal')}</span>
     </div>
   );
 }
@@ -26,14 +34,15 @@ export function RequireAuth({ children }) {
 }
 
 export function RequireRole({ roles, children }) {
+  const { t } = useTranslation();
   const { hasRole } = useAuth();
   if (!hasRole(roles)) {
     return (
       <EmptyState
         icon={ShieldAlert}
-        title="Access restricted"
-        message="Your account role does not have permission to open this page."
-        action={<Link to="/dashboard" className="btn btn--primary">Return to dashboard</Link>}
+        title={t('feedback.accessRestricted')}
+        message={t('feedback.accessMessage')}
+        action={<Link to="/dashboard" className="btn btn--primary">{t('feedback.returnDashboard')}</Link>}
       />
     );
   }

@@ -7,6 +7,7 @@ import CalendarPanel from './CalendarPanel.jsx';
 import ClassesPanel from './ClassesPanel.jsx';
 import ExamsPanel from './ExamsPanel.jsx';
 import SubjectsPanel from './SubjectsPanel.jsx';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
   { id: 'calendar', label: 'Calendar & Terms', icon: CalendarDays, Panel: CalendarPanel },
@@ -17,6 +18,7 @@ const TABS = [
 ];
 
 export default function AcademicSetup() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const active = TABS.find((tab) => tab.id === params.get('tab')) ?? TABS[0];
   const { Panel } = active;
@@ -24,9 +26,9 @@ export default function AcademicSetup() {
   return (
     <div className="stack-lg">
       <PageHeader
-        eyebrow="Headmaster"
-        title="Academic setup"
-        subtitle="Configure the school calendar, classes, subjects, teaching assignments and examinations."
+        eyebrow={t('pages.academics.eyebrow')}
+        title={t('pages.academics.title')}
+        subtitle={t('pages.academics.subtitle')}
       />
       <Tabs
         tabs={TABS}

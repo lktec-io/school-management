@@ -5,6 +5,7 @@ import Tabs from '../../../components/ui/Tabs.jsx';
 import DiscountsPanel from './DiscountsPanel.jsx';
 import FeeTypesPanel from './FeeTypesPanel.jsx';
 import StructuresPanel from './StructuresPanel.jsx';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
   { id: 'structures', label: 'Fee structures', icon: Layers, Panel: StructuresPanel },
@@ -13,12 +14,13 @@ const TABS = [
 ];
 
 export default function FeeSetup() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const active = TABS.find((tab) => tab.id === params.get('tab')) ?? TABS[0];
   const { Panel } = active;
   return (
     <div className="stack-lg">
-      <PageHeader eyebrow="Finance" title="Fee setup" subtitle="What each class pays per term, optional items, and approved waivers." />
+      <PageHeader eyebrow={t('nav.sections.finance')} title={t('pages.fees.title')} subtitle={t('pages.fees.subtitle')} />
       <Tabs tabs={TABS} active={active.id} label="Fee setup sections" onChange={(id) => setParams({ tab: id }, { replace: true })} />
       <div role="tabpanel" id={`panel-${active.id}`} aria-labelledby={`tab-${active.id}`}>
         <Panel key={active.id} />
