@@ -4,6 +4,7 @@ import env from '../../config/env.js';
 import { query, queryOne, withTransaction } from '../../config/db.js';
 import { ApiError } from '../../middleware/errorHandler.js';
 import { recordAudit } from '../../utils/audit.js';
+import { photoVersion, removePhoto, storePhoto } from '../../utils/photoStore.js';
 import { signAccessToken } from '../../utils/jwt.js';
 
 // Compared against when the account does not exist so response time does not reveal valid usernames.
@@ -11,7 +12,7 @@ const TIMING_GUARD_HASH = bcrypt.hashSync(crypto.randomBytes(32).toString('hex')
 
 const INVALID_CREDENTIALS = 'Invalid email/phone or password';
 
-const USER_AUTH_COLUMNS = `id, full_name, email, phone, password_hash, role, status, must_change_password,
+const USER_AUTH_COLUMNS = `id, full_name, email, phone, photo_path, password_hash, role, status, must_change_password,
   token_version, failed_login_attempts, locked_until, last_login_at`;
 
 export function toPublicUser(user) {
@@ -24,6 +25,8 @@ export function toPublicUser(user) {
     status: user.status,
     mustChangePassword: user.must_change_password === 1,
     lastLoginAt: user.last_login_at,
+    // API-relative and versioned per upload, like student photos.
+    photoUrl: user.photo_path ? `/auth/users/${user.id}/photo?v=${encodeURIComponent(photoVersion(user.photo_path))}` : null,
   };
 }
 
@@ -109,7 +112,7 @@ export async function login({ identifier, password }, context) {
 
 export async function getProfile(userId) {
   const user = await queryOne(
-    `SELECT id, full_name, email, phone, role, status, must_change_password, last_login_at
+    `SELECT id, full_name, email, phone, photo_path, role, status, must_change_password, last_login_at
        FROM users WHERE id = ?`,
     [userId],
   );
@@ -155,4 +158,33 @@ export async function changePassword(userId, { currentPassword, newPassword }, c
   });
 
   return { user: toPublicUser(updatedUser), token: signAccessToken(updatedUser) };
+}
+
+/** Replace the signed-in user's profile picture. */
+export async function saveOwnPhoto(userId, dataUrl, context) {
+  const before = await queryOne('SELECT photo_path FROM users WHERE id = ?', [userId]);
+  if (!before) throw ApiError.notFound('User not found');
+  const { relativePath, bytes } = await storePhoto('users', userId, dataUrl);
+  await query('UPDATE users SET photo_path = ? WHERE id = ?', [relativePath, userId]);
+  if (before.photo_path) await removePhoto(before.photo_path);
+  await recordAudit({ ...context, action: 'user.photo_upload', targetTable: 'users', targetId: userId, details: { bytes, file: relativePath } });
+  return getProfile(userId);
+}
+
+export async function deleteOwnPhoto(userId, context) {
+  const before = await queryOne('SELECT photo_path FROM users WHERE id = ?', [userId]);
+  if (before?.photo_path) {
+    await query('UPDATE users SET photo_path = NULL WHERE id = ?', [userId]);
+    await removePhoto(before.photo_path);
+    await recordAudit({ ...context, action: 'user.photo_delete', targetTable: 'users', targetId: userId });
+  }
+  return getProfile(userId);
+}
+
+/** Stored photo path of a user, visible to that user and to the Headmaster (404 otherwise). */
+export async function visibleUserPhotoPath(viewer, userId) {
+  if (viewer.id !== userId && viewer.role !== 'admin') throw ApiError.notFound('Photo not found');
+  const row = await queryOne('SELECT photo_path FROM users WHERE id = ?', [userId]);
+  if (!row?.photo_path) throw ApiError.notFound('Photo not found');
+  return row.photo_path;
 }

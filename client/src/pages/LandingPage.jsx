@@ -1,5 +1,5 @@
 import {
-  ArrowRight, BellRing, CheckCircle2, ExternalLink, FileText, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu,
+  ArrowRight, BellRing, CheckCircle2, ExternalLink, FileText, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu, Monitor,
   Phone, Receipt, ShieldCheck, Target, Telescope, Wallet, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -7,11 +7,13 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Crest from '../components/layout/Crest.jsx';
 import LanguageSwitch from '../components/ui/LanguageSwitch.jsx';
+import LiveBadge from '../components/ui/LiveBadge.jsx';
 import { COPY, IMAGES, SLIDES, STAFF } from '../content/landing.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
 import { formatPhone } from '../utils/format.js';
+import { isFreshNews } from '../utils/news.js';
 import '../styles/landing.css';
 
 const SECTIONS = [
@@ -74,10 +76,10 @@ function StaffCard({ member, name, lang }) {
   );
 }
 
-function SectionHead({ eyebrow, title, lead, align = 'center' }) {
+function SectionHead({ eyebrow, title, lead, align = 'center', badge }) {
   return (
     <header className={`section-head section-head--${align}`}>
-      <span className="section-head__eyebrow">{eyebrow}</span>
+      <span className="section-head__eyebrow">{eyebrow}{badge}</span>
       <h2 className="section-head__title">{title}</h2>
       {lead && <p className="section-head__lead">{lead}</p>}
     </header>
@@ -224,6 +226,14 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+            <div className="ict-banner">
+              <img src={IMAGES.computer} alt={t.streams.ictAlt} loading="lazy" />
+              <div className="ict-banner__copy">
+                <span className="ict-banner__icon" aria-hidden="true"><Monitor size={20} /></span>
+                <h3>{t.streams.ictTitle}</h3>
+                <p>{t.streams.ictText}</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -269,7 +279,11 @@ export default function LandingPage() {
         {/* ---- Announcements --------------------------------------------- */}
         <section id="matangazo" className="site-section">
           <div className="site-container">
-            <SectionHead eyebrow={t.announcements.eyebrow} title={t.announcements.title} />
+            <SectionHead
+              eyebrow={t.announcements.eyebrow}
+              title={t.announcements.title}
+              badge={(announcements.data ?? []).some((item) => isFreshNews(item.publishedAt)) ? <LiveBadge>{t.announcements.live}</LiveBadge> : null}
+            />
             {announcements.error && <p className="notice-empty">{t.announcements.error}</p>}
             {announcements.data && announcements.data.length === 0 && (
               <p className="notice-empty"><Megaphone size={18} aria-hidden="true" /> {t.announcements.empty}</p>
@@ -279,9 +293,10 @@ export default function LandingPage() {
                 {announcements.data.map((item) => {
                   const date = new Date(`${item.publishedAt}T12:00:00`);
                   return (
-                    <article key={item.id} className="notice">
+                    <article key={item.id} className={`notice${isFreshNews(item.publishedAt) ? ' notice--fresh' : ''}`}>
                       <div className="notice__meta">
                         <span className="notice__category">{t.announcements.categories[item.category] ?? item.category}</span>
+                        {isFreshNews(item.publishedAt) && <LiveBadge className="live-badge--sm">{t.announcements.new}</LiveBadge>}
                         <time className="mono" dateTime={item.publishedAt}>
                           {date.toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </time>

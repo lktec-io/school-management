@@ -177,7 +177,7 @@ export default function StudentProfile() {
             <div className="card__body text-sm text-muted">No current term is set, so the term balance cannot be calculated.</div>
           )}
           <div className="table-wrapper">
-            <table className="data-table">
+            <table className="data-table data-table--cards">
               <thead>
                 <tr>
                   <th>Receipt No.</th><th>Date</th><th>Term</th><th>Fee type</th><th>Mode</th><th>Reference</th>
@@ -191,14 +191,14 @@ export default function StudentProfile() {
                 )}
                 {fees.payments.map((payment) => (
                   <tr key={payment.id} className={payment.status === 'reversed' ? 'is-muted' : undefined}>
-                    <td><span className="receipt-no">{payment.receiptNo}</span></td>
-                    <td className="mono">{formatDate(payment.paymentDate)}</td>
-                    <td>{payment.termName} <span className="mono text-muted">{payment.yearLabel}</span></td>
-                    <td>{payment.feeTypeName || 'General'}</td>
-                    <td><PaymentModeBadge mode={payment.paymentMode} /></td>
-                    <td className="mono">{payment.referenceNo || '—'}</td>
-                    <td className="numeric">{formatMoney(payment.amountPaid)}</td>
-                    <td><StatusBadge status={payment.status} /></td>
+                    <td data-label={t('students.profile.receipt')}><span className="receipt-no">{payment.receiptNo}</span></td>
+                    <td data-label={t('common.date')} className="mono">{formatDate(payment.paymentDate)}</td>
+                    <td data-label={t('students.profile.term')}>{payment.termName} <span className="mono text-muted">{payment.yearLabel}</span></td>
+                    <td data-label={t('students.profile.feeType')}>{payment.feeTypeName || t('students.profile.general')}</td>
+                    <td data-label={t('dash.method')}><PaymentModeBadge mode={payment.paymentMode} /></td>
+                    <td data-label={t('students.profile.reference')} className="mono">{payment.referenceNo || '—'}</td>
+                    <td data-label={t('dash.amountTzs')} className="numeric">{formatMoney(payment.amountPaid)}</td>
+                    <td data-label={t('common.status')}><StatusBadge status={payment.status} /></td>
                     <td className="actions">
                       <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Download receipt ${payment.receiptNo}`}
                         disabled={pending === payment.id} onClick={() => run(payment.id, () => downloadReceipt(payment))}>
@@ -222,7 +222,7 @@ export default function StudentProfile() {
             </div>
           ) : (
             <div className="table-wrapper">
-              <table className="data-table">
+              <table className="data-table data-table--cards">
                 <thead>
                   <tr>
                     <th>Examination</th><th>Term</th><th>Class</th>
@@ -234,17 +234,17 @@ export default function StudentProfile() {
                 <tbody>
                   {performance.map((row) => (
                     <tr key={`${row.examId}-${row.classId}`}>
-                      <td>
+                      <td data-label={t('dash.exam')}>
                         <span className="data-table__primary">{row.examName}</span>
                         <span className="data-table__secondary">{EXAM_TYPE_LABELS[row.examType]} · <StatusBadge status={row.examStatus} /></span>
                       </td>
-                      <td>{row.termName} <span className="mono text-muted">{row.yearLabel}</span></td>
-                      <td>{row.className}</td>
-                      <td className="numeric">{row.subjectsSat}</td>
-                      <td className="numeric">{formatNumber(row.totalScore)}</td>
-                      <td className="numeric">{formatNumber(row.averagePct)}</td>
-                      <td className="center"><GradeChip grade={row.grade} /></td>
-                      <td className="numeric">{row.classPosition} / {row.classSize}</td>
+                      <td data-label={t('students.profile.term')}>{row.termName} <span className="mono text-muted">{row.yearLabel}</span></td>
+                      <td data-label={t('common.class')}>{row.className}</td>
+                      <td data-label={t('students.profile.subjects')} className="numeric">{row.subjectsSat}</td>
+                      <td data-label={t('students.profile.total')} className="numeric">{formatNumber(row.totalScore)}</td>
+                      <td data-label={t('students.profile.average')} className="numeric">{formatNumber(row.averagePct)}</td>
+                      <td data-label={t('students.profile.grade')} className="center"><GradeChip grade={row.grade} /></td>
+                      <td data-label={t('students.profile.position')} className="numeric"><span className="mono">{row.classPosition} / {row.classSize}</span></td>
                       <td className="actions">
                         <Link to={`/reports?studentId=${student.id}&examId=${row.examId}`} className="btn btn--ghost btn--sm">
                           <FileText size={14} aria-hidden="true" /> Report

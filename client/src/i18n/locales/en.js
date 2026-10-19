@@ -55,6 +55,7 @@ const en = {
       sms: 'SMS Center',
       users: 'User Accounts',
       settings: 'School Settings',
+      profile: 'My Profile',
       password: 'Change Password',
     },
   },
@@ -85,6 +86,7 @@ const en = {
     confirmed: 'Confirmed', reversed: 'Reversed', recorded: 'Recorded', voided: 'Voided', revoked: 'Revoked',
     queued: 'Queued', sent: 'Sent', delivered: 'Delivered', failed: 'Failed',
   },
+  account: { title: 'My profile', subtitle: 'Your profile picture and account details.', photo: 'Profile picture', photoHint: 'PNG or JPEG, resized automatically. Shown in the top menu.', photoSaved: 'Profile picture saved.', photoRemoved: 'Profile picture removed.', details: 'Account details', name: 'Name', role: 'Role', email: 'Email', phone: 'Phone', lastLogin: 'Last sign-in' },
   confirm: { title: 'Please confirm', ok: 'Yes, continue' },
   feedback: {
     errorTitle: 'Something went wrong',
@@ -115,6 +117,7 @@ const en = {
     notFound: { title: 'Page not found', message: 'The page you are looking for does not exist or has moved.' },
   },
   dash: {
+    news: { title: 'News & Announcements', fresh_one: '{{count}} new update', fresh_other: '{{count}} new updates', new: 'NEW', breaking: 'BREAKING', readMore: 'Read more', empty: 'No announcements at the moment.', error: 'Announcements could not be loaded.' },
     greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening' },
     subtitle: {
       admin: 'Headmaster portal — school-wide enrolment, finance and academics at a glance.',
@@ -298,6 +301,7 @@ const en = {
       failed: 'Student saved, but the photo was not uploaded: {{message}}',
     },
     profile: {
+      receipt: 'Receipt', term: 'Term', feeType: 'Fee type', general: 'General', reference: 'Reference', subjects: 'Subjects', total: 'Total', average: 'Average %', grade: 'Grade', position: 'Position',
       latestReport: 'Latest report card',
       changeStatus: 'Change status',
       edit: 'Edit details',

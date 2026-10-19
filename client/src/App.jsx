@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound.jsx';
 
 // Feature screens load on demand so the first paint stays small on school/mobile connections.
 const AcademicSetup = lazy(() => import('./pages/academics/AcademicSetup.jsx'));
+const AccountProfile = lazy(() => import('./pages/AccountProfile.jsx'));
 const ChangePassword = lazy(() => import('./pages/ChangePassword.jsx'));
 const ExpensesList = lazy(() => import('./pages/finance/ExpensesList.jsx'));
 const FeeDefaulters = lazy(() => import('./pages/finance/FeeDefaulters.jsx'));
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="finance/fees" element={page(<FeeSetup />, FINANCE)} />
           <Route path="finance/expenses" element={page(<ExpensesList />, FINANCE)} />
           <Route path="sms" element={page(<SmsCenter />, FINANCE)} />
+          <Route path="account" element={page(<AccountProfile />)} />
           <Route path="account/password" element={page(<ChangePassword />)} />
           <Route path="*" element={<NotFound />} />
         </Route>

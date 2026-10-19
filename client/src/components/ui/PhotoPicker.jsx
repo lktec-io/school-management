@@ -8,7 +8,7 @@ import { resizeImageFile } from '../../utils/images.js';
  * Passport-photo picker. `value` is a pending data URL (new pick), `currentUrl` the saved photo
  * (API-relative). `onChange(dataUrl | null)` reports a new pick or a removal request.
  */
-export default function PhotoPicker({ name, value, currentUrl, onChange, removable = false, disabled = false }) {
+export default function PhotoPicker({ name, value, currentUrl, onChange, removable = false, disabled = false, hint }) {
   const { t } = useTranslation();
   const inputId = useId();
   const [error, setError] = useState(null);
@@ -56,7 +56,7 @@ export default function PhotoPicker({ name, value, currentUrl, onChange, removab
           </button>
         )}
       </div>
-      <span className={error ? 'form-error' : 'form-hint'}>{error || t('students.photo.hint')}</span>
+      <span className={error ? 'form-error' : 'form-hint'}>{error || hint || t('students.photo.hint')}</span>
     </div>
   );
 }

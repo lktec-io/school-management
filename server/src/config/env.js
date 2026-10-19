@@ -176,6 +176,8 @@ const env = Object.freeze({
     balanceUrl: read('BEEM_BALANCE_URL', { fallback: 'https://apisms.beem.africa/public/v1/vendors/balance' }),
     timeoutMs: readInt('BEEM_TIMEOUT_MS', 15000, { min: 1000, max: 120000 }),
     paymentConfirmations: readBool('SMS_PAYMENT_CONFIRMATION', true),
+    // Language of automatic SMS (payment confirmations): sw (default) or en.
+    language: read('SMS_LANGUAGE', { fallback: 'sw' }) === 'en' ? 'en' : 'sw',
   }),
 });
 

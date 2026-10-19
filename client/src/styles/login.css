@@ -53,6 +53,7 @@
 
 .login-main { display: flex; flex: 1; align-items: center; justify-content: center; padding: var(--space-4) var(--space-4) var(--space-8); }
 
+/* Frosted glass card: translucent white over the photo, white text, crisp near-opaque inputs. */
 .login-card {
   display: flex;
   flex-direction: column;
@@ -60,36 +61,41 @@
   width: 100%;
   max-width: 440px;
   padding: var(--space-7) var(--space-6);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.25);
-  color: var(--color-text);
-  backdrop-filter: blur(14px) saturate(140%);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 32px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: var(--color-white);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
 }
-@supports not (backdrop-filter: blur(1px)) { .login-card { background: var(--color-white); } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .login-card { background: rgba(15, 23, 42, 0.88); } }
 .login-card__brand { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); color: inherit; text-align: center; text-decoration: none; }
 .login-card__brand:hover { text-decoration: none; }
-.login-card__school { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: var(--weight-extrabold); line-height: 1.25; color: var(--color-navy-900); overflow-wrap: anywhere; }
-.login-card__motto { font-size: var(--text-sm); font-style: italic; color: #047857; }
-.login-card__divider { height: 1px; background: var(--color-border); }
-.login-card__title { margin: 0; font-size: clamp(1.4rem, 4vw, 1.65rem); color: var(--color-navy-900); letter-spacing: -0.01em; }
-.login-card__subtitle { margin: -6px 0 0; color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.55; }
+.login-card__school { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: var(--weight-extrabold); line-height: 1.25; color: var(--color-white); overflow-wrap: anywhere; }
+.login-card__motto { font-size: var(--text-sm); font-style: italic; color: #6ee7b7; }
+.login-card__divider { height: 1px; background: rgba(255, 255, 255, 0.22); }
+.login-card__title { margin: 0; font-size: clamp(1.4rem, 4vw, 1.65rem); color: var(--color-white); letter-spacing: -0.01em; }
+.login-card__subtitle { margin: -6px 0 0; color: #e2e8f0; font-size: var(--text-sm); line-height: 1.55; }
 .login-roles { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.login-roles li { padding: 3px 8px; border: 1px solid #bfdbfe; border-radius: 5px; background: #eff6ff; color: var(--color-navy-800); font-size: var(--text-2xs); font-weight: var(--weight-bold); }
-.login-card__legal { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-xs); line-height: 1.5; }
-.login-card__legal svg { flex-shrink: 0; margin-top: 1px; color: #047857; }
+.login-roles li { padding: 3px 8px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 5px; background: rgba(255, 255, 255, 0.12); color: var(--color-white); font-size: var(--text-2xs); font-weight: var(--weight-bold); }
+.login-card__legal { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding-top: var(--space-3); border-top: 1px solid rgba(255, 255, 255, 0.22); color: #cbd5e1; font-size: var(--text-xs); line-height: 1.5; }
+.login-card__legal svg { flex-shrink: 0; margin-top: 1px; color: #34d399; }
 
 /* Inputs and button: crisp 5px corners, 48px touch targets. */
-.login-card .gov-label { font-size: var(--text-xs); letter-spacing: 0.04em; color: var(--color-text-secondary); }
-.login-card .gov-input { height: 48px; border: 1px solid var(--color-border-strong); border-radius: 5px; background: var(--color-white); font-size: 16px; }
-.login-card .gov-input:focus { border-color: var(--color-navy-800); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.18); }
-.login-card .gov-input-group__toggle { width: 48px; border-radius: 0 5px 5px 0; }
+.login-card .gov-label { font-size: var(--text-xs); letter-spacing: 0.04em; color: #f1f5f9; }
+.login-card .gov-input { height: 48px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 5px; background: rgba(255, 255, 255, 0.95); color: var(--color-navy-900); font-size: 16px; }
+.login-card .gov-input::placeholder { color: #64748b; }
+.login-card .gov-input:focus { border-color: var(--color-white); box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.55); }
+.login-card .gov-input[aria-invalid="true"] { border-color: #fca5a5; background: #fff5f5; }
+.login-card .gov-input-group__toggle { width: 48px; border-radius: 0 5px 5px 0; color: #475569; }
+.login-card .gov-error { color: #fecaca; }
 .login-card .gov-btn { height: 50px; border-radius: 5px; letter-spacing: 0.04em; }
-.login-card .gov-btn--primary { background: var(--color-navy-800); }
-.login-card .gov-btn--primary:hover:not(:disabled) { background: var(--color-navy-700); }
+.login-card .gov-btn--primary { background: var(--color-gold-500); color: var(--color-white); }
+.login-card .gov-btn--primary:hover:not(:disabled) { background: #047857; }
 .login-card .gov-btn:disabled { opacity: 0.85; cursor: progress; }
-.login-card .gov-alert { border-radius: 5px; }
+.login-card .gov-alert { border-color: rgba(254, 202, 202, 0.6); border-radius: 5px; background: rgba(220, 38, 38, 0.85); color: var(--color-white); }
+.login-card .gov-form__note { color: #cbd5e1; }
 
 .login-footer { padding: 0 var(--space-4) var(--space-5); color: #94a3b8; font-size: var(--text-xs); text-align: center; }
 

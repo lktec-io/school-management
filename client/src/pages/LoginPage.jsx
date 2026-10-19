@@ -45,7 +45,7 @@ export default function LoginPage() {
       <main className="login-main">
         <div className="login-card">
           <Link to="/" className="login-card__brand">
-            <Crest name={school?.name || ''} size={56} logoSrc={school?.logoSrc} />
+            <Crest name={school?.name || ''} size={56} inverted logoSrc={school?.logoSrc} />
             <span className="login-card__school">{school?.name || t('topbar.portal')}</span>
             {school?.motto && <span className="login-card__motto">“{school.motto}”</span>}
           </Link>

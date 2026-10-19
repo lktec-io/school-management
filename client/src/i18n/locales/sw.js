@@ -55,6 +55,7 @@ const sw = {
       sms: 'Kituo cha SMS',
       users: 'Akaunti za Watumiaji',
       settings: 'Mipangilio ya Shule',
+      profile: 'Wasifu Wangu',
       password: 'Badilisha Nenosiri',
     },
   },
@@ -85,6 +86,7 @@ const sw = {
     confirmed: 'Imethibitishwa', reversed: 'Imerejeshwa', recorded: 'Imerekodiwa', voided: 'Imebatilishwa', revoked: 'Imefutwa',
     queued: 'Kwenye foleni', sent: 'Imetumwa', delivered: 'Imefika', failed: 'Imeshindwa',
   },
+  account: { title: 'Wasifu wangu', subtitle: 'Picha yako ya wasifu na taarifa za akaunti.', photo: 'Picha ya wasifu', photoHint: 'PNG au JPEG, hupunguzwa ukubwa yenyewe. Huonekana kwenye menyu ya juu.', photoSaved: 'Picha ya wasifu imehifadhiwa.', photoRemoved: 'Picha ya wasifu imeondolewa.', details: 'Taarifa za akaunti', name: 'Jina', role: 'Nafasi', email: 'Barua pepe', phone: 'Simu', lastLogin: 'Uliingia mara ya mwisho' },
   confirm: { title: 'Thibitisha', ok: 'Ndiyo, endelea' },
   feedback: {
     errorTitle: 'Hitilafu imetokea',
@@ -115,6 +117,7 @@ const sw = {
     notFound: { title: 'Ukurasa haupatikani', message: 'Ukurasa unaotafuta haupo au umehamishwa.' },
   },
   dash: {
+    news: { title: 'Habari na Matangazo', fresh_one: 'Tangazo {{count}} jipya', fresh_other: 'Matangazo {{count}} mapya', new: 'MPYA', breaking: 'HABARI MPYA', readMore: 'Soma zaidi', empty: 'Hakuna matangazo kwa sasa.', error: 'Matangazo hayakuweza kupakiwa.' },
     greeting: { morning: 'Habari za asubuhi', afternoon: 'Habari za mchana', evening: 'Habari za jioni' },
     subtitle: {
       admin: 'Mfumo wa Mkuu wa Shule — usajili, fedha na taaluma za shule nzima kwa mtazamo mmoja.',
@@ -298,6 +301,7 @@ const sw = {
       failed: 'Mwanafunzi amehifadhiwa, lakini picha haikupakiwa: {{message}}',
     },
     profile: {
+      receipt: 'Risiti', term: 'Muhula', feeType: 'Aina ya ada', general: 'Jumla', reference: 'Kumbukumbu', subjects: 'Masomo', total: 'Jumla ya alama', average: 'Wastani %', grade: 'Daraja', position: 'Nafasi',
       latestReport: 'Ripoti ya karibuni',
       changeStatus: 'Badilisha hali',
       edit: 'Hariri taarifa',

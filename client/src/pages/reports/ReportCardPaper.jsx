@@ -48,14 +48,14 @@ export default function ReportCardPaper({ card }) {
         <tbody>
           {(result?.subjects ?? []).map((subject, index) => (
             <tr key={subject.subjectId}>
-              <td className="mono">{index + 1}</td>
-              <td>{subject.name}</td>
-              <td className="numeric">{subject.isAbsent ? 'ABS' : formatNumber(subject.score)}</td>
-              <td className="numeric">{subject.isAbsent ? '—' : formatNumber(subject.percentage, 1)}</td>
-              <td className="center"><GradeChip grade={subject.grade} /></td>
-              {showPoints && <td className="numeric">{subject.points ?? '—'}</td>}
-              <td>{subject.teacherRemark || subject.remark}</td>
-              <td>{subject.teacherName || '—'}</td>
+              <td className="mono report-paper__index">{index + 1}</td>
+              <td className="report-paper__subject">{subject.name}</td>
+              <td className="numeric" data-label="Marks">{subject.isAbsent ? 'ABS' : formatNumber(subject.score)}</td>
+              <td className="numeric" data-label="%">{subject.isAbsent ? '—' : formatNumber(subject.percentage, 1)}</td>
+              <td className="center report-paper__grade" data-label="Grade"><GradeChip grade={subject.grade} /></td>
+              {showPoints && <td className="numeric" data-label="Points">{subject.points ?? '—'}</td>}
+              <td className="report-paper__remark" data-label="Remarks">{subject.teacherRemark || subject.remark}</td>
+              <td data-label="Subject teacher">{subject.teacherName || '—'}</td>
             </tr>
           ))}
         </tbody>

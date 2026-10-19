@@ -2,9 +2,9 @@
  * Public landing page content (Kiswahili / English).
  *
  * Editing guide:
- *  - Photos: the defaults are licensed stock photos from images.unsplash.com. For the best result
- *    replace them with the school's own photos — copy JPGs to client/public/images/ and change the
- *    URLs in IMAGES / SLIDES below to e.g. '/images/campus/form-three.jpg' (landscape, ≥1600px wide).
+ *  - Photos live in client/public/images/campus/ (African classrooms, Unsplash License — see
+ *    CREDITS.md there). To use the school's own photos, save a JPG under the same file name
+ *    (landscape, ≥1600px wide) or point IMAGES / SLIDES below at a new file.
  *  - Administration photos: copy portraits to client/public/images/staff/ using the file names in
  *    STAFF (JPG, roughly 4:5). Until a photo exists, an initials frame is shown.
  *  - Portal and login-page labels live in src/i18n/locales/ (sw.js, en.js).
@@ -12,22 +12,24 @@
  *    in the portal; announcements are managed there too.
  */
 
-const unsplash = (id, width = 1800) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=70`;
+// Self-hosted photos of African classrooms and staff (credits in client/public/images/campus/CREDITS.md).
+const campus = (file) => `/images/campus/${file}`;
 
 export const IMAGES = {
-  overview: unsplash('1509062522246-3755977927d7', 1200),
-  administration: unsplash('1552664730-d307ca884978', 1600),
-  parents: unsplash('1523240795612-9a054b0db644', 1200),
-  cta: unsplash('1577896851231-70ef18881754', 1800),
-  login: unsplash('1571260899304-425eee4c7efc', 2000),
+  overview: campus('classroom-pupils.jpg'),
+  administration: campus('teacher-chalkboard.jpg'),
+  parents: campus('student-portrait.jpg'),
+  computer: campus('computer-study.jpg'),
+  cta: campus('school-outreach-class.jpg'),
+  login: campus('secondary-class-lesson.jpg'),
 };
 
-/** Hero background rotation: students in class and study discussions. */
+/** Hero background rotation: secondary students in class and with their teachers. */
 export const SLIDES = [
-  { id: 'form-three', image: unsplash('1571260899304-425eee4c7efc'), alt: { sw: 'Wanafunzi wa sekondari wakiwa darasani', en: 'Secondary students at work in class' } },
-  { id: 'lesson', image: unsplash('1509062522246-3755977927d7'), alt: { sw: 'Mwalimu akifundisha darasa', en: 'A teacher leading a lesson' } },
-  { id: 'discussion', image: unsplash('1523240795612-9a054b0db644'), alt: { sw: 'Wanafunzi katika majadiliano ya kujisomea', en: 'Students in a study discussion' } },
-  { id: 'participation', image: unsplash('1577896851231-70ef18881754'), alt: { sw: 'Wanafunzi wakinyoosha mikono darasani', en: 'Students raising their hands in class' } },
+  { id: 'uniform-class', image: campus('students-uniform-class.jpg'), alt: { sw: 'Wanafunzi wa sekondari katika sare za shule darasani', en: 'Secondary students in school uniform in class' } },
+  { id: 'lesson', image: campus('secondary-class-lesson.jpg'), alt: { sw: 'Mwalimu akifundisha darasa la sekondari', en: 'A teacher leading a secondary class' } },
+  { id: 'teacher', image: campus('teacher-with-students.jpg'), alt: { sw: 'Mwalimu akiwa na wanafunzi darasani', en: 'A teacher with students in the classroom' } },
+  { id: 'outreach', image: campus('school-outreach-class.jpg'), alt: { sw: 'Wanafunzi katika darasa lililojaa', en: 'Students in a full classroom' } },
 ];
 
 /** School administration (no political office holders). `nameFrom` reads a name from School Settings. */
@@ -95,6 +97,9 @@ const sw = {
       { code: 'HKL', title: 'Historia, Kiswahili, Lugha' },
       { code: 'EGM', title: 'Uchumi, Jiografia, Hisabati' },
     ],
+    ictTitle: 'TEHAMA kwa kila mwanafunzi',
+    ictText: 'Mafunzo ya kompyuta kwa vitendo huwaandaa wanafunzi kwa elimu ya juu na ulimwengu wa kidijitali.',
+    ictAlt: 'Mwanafunzi akitumia kompyuta',
   },
   administration: {
     eyebrow: 'Muundo wa Uongozi',
@@ -118,6 +123,8 @@ const sw = {
   announcements: {
     eyebrow: 'Matangazo',
     title: 'Habari na Matangazo',
+    live: 'HABARI MPYA',
+    new: 'MPYA',
     empty: 'Hakuna matangazo kwa sasa. Tafadhali tembelea tena baadaye.',
     error: 'Matangazo hayakuweza kupakiwa kwa sasa.',
     categories: { general: 'Jumla', admissions: 'Udahili', examinations: 'Mitihani', events: 'Matukio', fees: 'Ada' },
@@ -185,6 +192,9 @@ const en = {
       { code: 'HKL', title: 'History, Kiswahili, Language' },
       { code: 'EGM', title: 'Economics, Geography, Mathematics' },
     ],
+    ictTitle: 'ICT for every learner',
+    ictText: 'Hands-on computer lessons prepare students for higher education and a digital world.',
+    ictAlt: 'A student working on a computer',
   },
   administration: {
     eyebrow: 'Administrative Structure',
@@ -208,6 +218,8 @@ const en = {
   announcements: {
     eyebrow: 'Announcements',
     title: 'News and Announcements',
+    live: 'BREAKING',
+    new: 'NEW',
     empty: 'There are no announcements at the moment. Please check back later.',
     error: 'Announcements could not be loaded right now.',
     categories: { general: 'General', admissions: 'Admissions', examinations: 'Examinations', events: 'Events', fees: 'Fees' },

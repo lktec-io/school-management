@@ -1,6 +1,6 @@
 import {
   FileText, GraduationCap, KeyRound, Landmark, LayoutDashboard, Layers, MessageSquareText, NotebookPen, Receipt,
-  Settings, TrendingDown, UserCog, UserX, Wallet,
+  Settings, TrendingDown, UserCog, UserRound, UserX, Wallet,
 } from 'lucide-react';
 
 const ALL_ROLES = ['admin', 'accountant', 'teacher', 'parent'];
@@ -48,6 +48,9 @@ export const NAV_SECTIONS = [
   },
   {
     id: 'account',
-    items: [{ id: 'password', to: '/account/password', icon: KeyRound, roles: ALL_ROLES }],
+    items: [
+      { id: 'profile', to: '/account', icon: UserRound, roles: ALL_ROLES, end: true },
+      { id: 'password', to: '/account/password', icon: KeyRound, roles: ALL_ROLES },
+    ],
   },
 ];

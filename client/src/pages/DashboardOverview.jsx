@@ -2,6 +2,7 @@ import { TriangleAlert } from 'lucide-react';
 import { Suspense, lazy } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import NewsCard, { NewsTicker } from '../components/dashboards/NewsCard.jsx';
 import { ErrorBlock, InlineAlert, PageSkeleton } from '../components/ui/Feedback.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -33,6 +34,7 @@ export default function DashboardOverview() {
         title={`${t(greetingKey(new Date()))}, ${user.fullName.split(' ')[0]}`}
         subtitle={t(`dash.subtitle.${user.role}`)}
       />
+      <NewsTicker />
       {loading && !data && <PageSkeleton variant="dashboard" />}
       <ErrorBlock error={error} onRetry={reload} />
       {data?.role === 'admin' && !data.period.term && (
@@ -48,6 +50,7 @@ export default function DashboardOverview() {
           {data.role === 'parent' && <ParentDashboard data={data} />}
         </Suspense>
       )}
+      {data && <NewsCard />}
     </div>
   );
 }

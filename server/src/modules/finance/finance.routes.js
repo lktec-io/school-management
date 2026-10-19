@@ -35,6 +35,7 @@ router.post('/discounts/:id/revoke', headmaster, c.revokeDiscount);
 
 router.get('/payments', finance, c.listPayments);
 router.post('/payments', finance, c.recordPayment);
+router.get('/payments/next-receipt', finance, c.nextReceipt);
 router.get('/payments/:id', financeOrParent, c.getPayment);
 router.post('/payments/:id/reverse', finance, sensitiveActionLimiter, c.reversePayment);
 router.get('/payments/:id/receipt-pdf', financeOrParent, c.receiptPdf);

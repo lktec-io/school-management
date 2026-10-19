@@ -201,6 +201,11 @@ export const listPayments = asyncHandler(async (req, res) => {
   }, parsePagination(req.query)));
 });
 
+export const nextReceipt = asyncHandler(async (req, res) => {
+  const { paymentDate } = validator(req.query).date('paymentDate', { notAfter: todayInSchoolTz(), notBefore: '2000-01-01' }).result();
+  res.json({ success: true, data: await payments.previewReceiptNo(paymentDate) });
+});
+
 export const recordPayment = asyncHandler(async (req, res) => {
   const data = validator(req.body)
     .id('studentId', { required: true })
@@ -212,9 +217,6 @@ export const recordPayment = asyncHandler(async (req, res) => {
     .date('paymentDate', { notAfter: todayInSchoolTz(), notBefore: '2000-01-01' })
     .string('notes', { max: 255, multiline: true })
     .boolean('sendSms')
-    .rule('referenceNo', (values) => (values.paymentMode && values.paymentMode !== 'cash' && !values.referenceNo
-      ? 'A transaction reference is required for non-cash payments'
-      : null))
     .result();
   const result = await payments.recordPayment(data, req.user, auditContext(req));
   res.status(201).json({ success: true, data: result, message: `Payment recorded — receipt ${result.payment.receiptNo}` });

@@ -1,9 +1,10 @@
-import { MessageSquareText, TriangleAlert } from 'lucide-react';
+import { Languages, MessageSquareText, TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { formatNumber } from '../../utils/format.js';
-import { MAX_SEGMENTS, PLACEHOLDER_LABELS, analyzeSms } from '../../utils/sms.js';
+import { MAX_SEGMENTS, PLACEHOLDER_LABELS, SMS_TEMPLATES, analyzeSms, templateText } from '../../utils/sms.js';
 import { InlineAlert } from '../ui/Feedback.jsx';
 
 const STUDENT = ['parent_name', 'student_name', 'first_name', 'reg_no', 'class', 'school'];
@@ -22,7 +23,23 @@ const PLACEHOLDERS_BY_TARGET = {
  * `onPreview(preview|null)` lets the parent enable/disable its send button.
  */
 export default function MessageComposer({ target, targetReady, value, onChange, onPreview }) {
+  const confirm = useConfirm();
   const textareaRef = useRef(null);
+  // Bilingual templates: pick one and switch SW / EN; the live preview below shows the real message.
+  const [templateId, setTemplateId] = useState(() => SMS_TEMPLATES.find((tpl) => Object.values(tpl.text).includes(value))?.id ?? '');
+  const [language, setLanguage] = useState(() => (SMS_TEMPLATES.some((tpl) => tpl.text.en === value) ? 'en' : 'sw'));
+  const templates = SMS_TEMPLATES.filter((tpl) => tpl.targets.includes(target?.type ?? 'custom'));
+
+  const applyTemplate = async (id, lang) => {
+    const next = templateText(id, lang);
+    if (!next) return;
+    // Only ask before replacing real work — not an empty box, a starter greeting or another template.
+    const untouched = value.trim().length < 30 || SMS_TEMPLATES.some((tpl) => Object.values(tpl.text).includes(value));
+    if (!untouched && !(await confirm('Replace the current message with the selected template?', { tone: 'primary' }))) return;
+    setTemplateId(id);
+    setLanguage(lang);
+    onChange(next);
+  };
   const [preview, setPreview] = useState(null);
   const [previewError, setPreviewError] = useState(null);
   const [previewing, setPreviewing] = useState(false);
@@ -91,6 +108,35 @@ export default function MessageComposer({ target, targetReady, value, onChange, 
 
   return (
     <div className="composer">
+      <div className="composer__templates">
+        <label className="composer__template">
+          <span className="eyebrow">Template · Kiolezo</span>
+          <select
+            className="form-control"
+            value={templateId}
+            onChange={(event) => (event.target.value ? applyTemplate(event.target.value, language) : setTemplateId(''))}
+          >
+            <option value="">Write my own message</option>
+            {templates.map((tpl) => <option key={tpl.id} value={tpl.id}>{tpl.label.sw} / {tpl.label.en}</option>)}
+          </select>
+        </label>
+        <div className="composer__language">
+          <span className="eyebrow"><Languages size={12} aria-hidden="true" className="inline-icon" />Message language</span>
+          <div className="segmented" role="group" aria-label="Message language">
+            {[['sw', 'Kiswahili'], ['en', 'English']].map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                className={`segmented__item${language === code ? ' is-active' : ''}`}
+                aria-pressed={language === code}
+                onClick={() => (templateId ? applyTemplate(templateId, code) : setLanguage(code))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="composer__chips" aria-label="Insert placeholder">
         {(PLACEHOLDERS_BY_TARGET[target?.type] ?? ['school']).map((key) => (
           <button key={key} type="button" className="chip" onClick={() => insert(key)} title={`Insert {${key}}`}>
@@ -143,6 +189,7 @@ export default function MessageComposer({ target, targetReady, value, onChange, 
         {insufficient && <p className="text-sm text-danger">Not enough SMS credit for this broadcast. Top up your Beem account first.</p>}
         {preview?.samples?.[0] && (
           <div className="sms-bubble">
+            <span className="eyebrow">Live preview — exactly what the first parent receives</span>
             <span className="sms-bubble__to mono"><MessageSquareText size={12} aria-hidden="true" /> {preview.samples[0].phone}</span>
             <p>{preview.samples[0].message}</p>
           </div>

@@ -8,9 +8,12 @@ import { analyzeSms } from '../utils/smsText.js';
 import { placeholders } from '../utils/sql.js';
 
 /**
- * Beem Africa SMS gateway.
- *   POST {BEEM_BASE_URL}     Basic auth (api key : secret key)
- *     { source_addr, encoding, schedule_time, message, recipients: [{ recipient_id, dest_addr }] }
+ * Beem Africa SMS gateway (https://docs.beem.africa/api-reference/send-sms).
+ *   POST {BEEM_BASE_URL}     HTTP Basic auth: base64("<api key>:<secret key>")
+ *     { source_addr: string ≤11, schedule_time: "" | "yyyy-mm-dd hh:mm", encoding: 0 (integer),
+ *       message: string, recipients: [{ recipient_id: integer, dest_addr: "255XXXXXXXXX" }] }
+ *   Code 120 / HTTP 401 "Invalid Authentication Parameters" always means the key/secret pair was
+ *   rejected — payload problems return their own codes (104, 113, 118, 111 …).
  *   GET  {BEEM_BALANCE_URL}  → { data: { credit_balance } }
  *
  * Every message is first written to sms_logs as `queued`, then dispatched; the row is updated
@@ -85,6 +88,32 @@ function logAuthFailure(context, status, data) {
   });
 }
 
+/** Documented Beem SMS response codes (https://docs.beem.africa/guides/sms/api-responses). */
+const BEEM_CODES = {
+  101: 'Invalid phone number',
+  102: 'Insufficient SMS balance — top up the Beem account',
+  103: 'Beem network timeout or internal error — retry later',
+  104: 'Required parameters missing',
+  109: 'Message is empty or invalid',
+  110: 'Message contains unsupported characters',
+  111: 'Sender ID is not registered or not active — check BEEM_SENDER_ID',
+  113: 'Invalid request format',
+  114: 'Too many recipients in one request',
+  115: 'Destination address missing',
+  116: 'Recipient reference ID missing or invalid',
+  118: 'Encoding missing',
+  119: 'Recipients missing',
+  120: 'Invalid Authentication Parameters',
+  121: 'Sender ID format is invalid — check BEEM_SENDER_ID',
+};
+
+function describeBeem(data, fallback) {
+  const code = Number(data?.code);
+  const known = BEEM_CODES[code];
+  if (known) return `${known} (Beem code ${code})`;
+  return data?.message || data?.data?.message || data?.error || fallback;
+}
+
 const AUTH_HELP = 'check BEEM_API_KEY / BEEM_SECRET_KEY in server/.env (details in the server log)';
 
 export function isSmsConfigured() {
@@ -150,12 +179,13 @@ export async function queueMessages(messages, { category = 'other', sentBy = nul
 
 async function postToBeem(recipients, message) {
   if (!isSmsConfigured()) return { ok: false, data: null, requestId: null, error: NOT_CONFIGURED };
+  // Field names and types exactly as Beem documents them (encoding and recipient_id are integers).
   const payload = {
     source_addr: env.beem.senderId,
-    encoding: 0,
     schedule_time: '',
+    encoding: 0,
     message,
-    recipients: recipients.map((row) => ({ recipient_id: row.id, dest_addr: row.recipient })),
+    recipients: recipients.map((row) => ({ recipient_id: Number(row.id), dest_addr: String(row.recipient) })),
   };
   try {
     const { data, status } = await http.post(env.beem.baseUrl, payload, authConfig());
@@ -164,16 +194,17 @@ async function postToBeem(recipients, message) {
       logAuthFailure('send', status, data);
       return { ok: false, data, requestId: null, error: `Gateway error: ${data?.message || 'Invalid Authentication Parameters'} — ${AUTH_HELP}` };
     }
+    if (!ok) logger.warn('Beem rejected the SMS request', { code: data?.code, message: data?.message, url: env.beem.baseUrl });
     return {
       ok,
       data,
       requestId: data?.request_id ? String(data.request_id) : null,
-      error: ok ? null : (data?.message || 'Message rejected by the SMS gateway'),
+      error: ok ? null : `Gateway error: ${describeBeem(data, 'Message rejected by the SMS gateway')}`,
     };
   } catch (error) {
     const status = error.response?.status;
     const data = error.response?.data ?? null;
-    const reason = data?.message || data?.data?.message || error.message;
+    const reason = describeBeem(data, error.message);
     if (isAuthFailure(status, data)) {
       logAuthFailure('send', status, data);
       return { ok: false, data, requestId: null, error: `Gateway error: ${reason} — ${AUTH_HELP}` };

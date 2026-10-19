@@ -66,11 +66,18 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  /** Upload (data URL) or remove (null) the signed-in user's profile picture. */
+  const updatePhoto = useCallback(async (dataUrl) => {
+    const data = dataUrl ? await api.put('/auth/me/photo', { dataUrl }) : await api.delete('/auth/me/photo');
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const hasRole = useCallback((...roles) => Boolean(user && roles.flat().includes(user.role)), [user]);
 
   const value = useMemo(
-    () => ({ user, status, login, logout, changePassword, hasRole }),
-    [user, status, login, logout, changePassword, hasRole],
+    () => ({ user, status, login, logout, changePassword, updatePhoto, hasRole }),
+    [user, status, login, logout, changePassword, updatePhoto, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

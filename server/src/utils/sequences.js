@@ -15,3 +15,9 @@ export async function nextSequenceValue(connection, key) {
   await query('UPDATE document_sequences SET seq_value = ? WHERE seq_key = ?', [next, key], connection);
   return next;
 }
+
+/** The value nextSequenceValue() would return now, without reserving it (for previews only). */
+export async function peekSequenceValue(key) {
+  const row = await queryOne('SELECT seq_value FROM document_sequences WHERE seq_key = ?', [key]);
+  return (row?.seq_value ?? 0) + 1;
+}

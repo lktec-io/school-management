@@ -6,7 +6,7 @@ import { recordAudit } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import logger from '../../utils/logger.js';
 import { paginated } from '../../utils/pagination.js';
-import { nextSequenceValue } from '../../utils/sequences.js';
+import { nextSequenceValue, peekSequenceValue } from '../../utils/sequences.js';
 import { likeContains, withNumbers } from '../../utils/sql.js';
 import { getCurrentPeriod } from '../academics/calendar.service.js';
 import { getSchoolProfile } from '../system/settings.service.js';
@@ -94,15 +94,26 @@ export async function listPayments(filters, pagination) {
   };
 }
 
-function confirmationMessage(payment, balance, schoolName) {
+/** Automatic payment confirmation, in SMS_LANGUAGE (Kiswahili by default). */
+function confirmationMessage(payment, balance, schoolName, language = env.beem.language) {
   const name = [payment.firstName, payment.lastName].join(' ');
+  const term = `${payment.termName} ${payment.yearLabel}`;
+  if (language === 'en') {
+    const balanceText = balance.balance > 0
+      ? `${term} balance: ${formatTzs(balance.balance)}.`
+      : balance.balance < 0
+        ? `${payment.termName} fees fully paid (credit ${formatTzs(-balance.balance)}).`
+        : `${payment.termName} fees fully paid.`;
+    return `${schoolName}: Received ${formatTzs(payment.amountPaid)} for ${name} (${payment.registrationNumber}), `
+      + `receipt ${payment.receiptNo}. ${balanceText} Thank you.`;
+  }
   const balanceText = balance.balance > 0
-    ? `${payment.termName} ${payment.yearLabel} balance: ${formatTzs(balance.balance)}.`
+    ? `Salio la ${term}: ${formatTzs(balance.balance)}.`
     : balance.balance < 0
-      ? `${payment.termName} fees fully paid (credit ${formatTzs(-balance.balance)}).`
-      : `${payment.termName} fees fully paid.`;
-  return `${schoolName}: Received ${formatTzs(payment.amountPaid)} for ${name} (${payment.registrationNumber}), `
-    + `receipt ${payment.receiptNo}. ${balanceText} Asante.`;
+      ? `Ada ya ${payment.termName} imelipwa yote (ziada ${formatTzs(-balance.balance)}).`
+      : `Ada ya ${payment.termName} imelipwa yote.`;
+  return `${schoolName}: Tumepokea ${formatTzs(payment.amountPaid)} kwa ajili ya ${name} (${payment.registrationNumber}), `
+    + `risiti ${payment.receiptNo}. ${balanceText} Asante.`;
 }
 
 async function queuePaymentConfirmation(payment, balance, user) {
@@ -121,6 +132,16 @@ async function queuePaymentConfirmation(payment, balance, user) {
     logger.error('Could not queue payment confirmation SMS', { paymentId: payment.id, error: error.message });
     return { queued: false, reason: 'SMS could not be queued' };
   }
+}
+
+function formatReceiptNo(year, sequence) {
+  return `${env.finance.receiptPrefix}-${year}-${String(sequence).padStart(4, '0')}`;
+}
+
+/** Next receipt number for a payment date — shown in the form before saving; assigned atomically on save. */
+export async function previewReceiptNo(paymentDate = todayInSchoolTz()) {
+  const year = paymentDate.slice(0, 4);
+  return { receiptNo: formatReceiptNo(year, await peekSequenceValue(`RECEIPT-${year}`)) };
 }
 
 export async function recordPayment(data, user, context) {
@@ -146,13 +167,15 @@ export async function recordPayment(data, user, context) {
   try {
     paymentId = await withTransaction(async (connection) => {
       const sequence = await nextSequenceValue(connection, `RECEIPT-${year}`);
-      const receiptNo = `${env.finance.receiptPrefix}-${year}-${String(sequence).padStart(4, '0')}`;
+      const receiptNo = formatReceiptNo(year, sequence);
+      // No bank/mobile-money reference given → the payment is referenced by its own receipt number.
+      const referenceNo = data.referenceNo || receiptNo;
       const result = await query(
         `INSERT INTO fee_payments (receipt_no, student_id, term_id, fee_type_id, amount_paid, payment_mode, reference_no,
            payment_date, notes, status, recorded_by)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?)`,
         [receiptNo, data.studentId, termId, data.feeTypeId ?? null, data.amountPaid, data.paymentMode,
-          data.referenceNo ?? null, paymentDate, data.notes ?? null, user.id],
+          referenceNo, paymentDate, data.notes ?? null, user.id],
         connection,
       );
       await recordAudit({
@@ -160,7 +183,7 @@ export async function recordPayment(data, user, context) {
         action: 'payment.create',
         targetTable: 'fee_payments',
         targetId: result.insertId,
-        details: { receiptNo, ...data, termId, paymentDate },
+        details: { receiptNo, ...data, referenceNo, termId, paymentDate },
       }, connection);
       return result.insertId;
     });

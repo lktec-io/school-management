@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown, KeyRound, LogOut, Menu, TriangleAlert } from 'lucide-react';
+import { CalendarDays, ChevronDown, KeyRound, LogOut, Menu, TriangleAlert, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,11 +6,8 @@ import { useAcademicPeriod } from '../../context/AcademicContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSchoolProfile } from '../../hooks/useSchoolProfile.js';
 import LanguageSwitch from '../ui/LanguageSwitch.jsx';
+import StudentAvatar from '../ui/StudentAvatar.jsx';
 import Crest from './Crest.jsx';
-
-function initialsOf(name = '') {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
-}
 
 function TermBadge() {
   const { t } = useTranslation();
@@ -70,7 +67,7 @@ function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="user-menu__avatar" aria-hidden="true">{initialsOf(user.fullName)}</span>
+        <StudentAvatar name={user.fullName} photoUrl={user.photoUrl} size="sm" className="user-menu__avatar" />
         <span className="user-menu__identity">
           <span className="user-menu__name">{user.fullName}</span>
           <span className="user-menu__role">{t(`roles.${user.role}`)}</span>
@@ -83,6 +80,9 @@ function UserMenu() {
             <span className="user-menu__name">{user.fullName}</span>
             <span className="text-xs text-muted">{user.email || user.phone}</span>
           </div>
+          <Link to="/account" className="user-menu__item" role="menuitem" onClick={() => setOpen(false)}>
+            <UserRound size={16} aria-hidden="true" /> {t('nav.items.profile')}
+          </Link>
           <Link to="/account/password" className="user-menu__item" role="menuitem" onClick={() => setOpen(false)}>
             <KeyRound size={16} aria-hidden="true" /> {t('nav.items.password')}
           </Link>

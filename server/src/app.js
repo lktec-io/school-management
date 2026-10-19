@@ -34,11 +34,11 @@ app.use(cors({
   maxAge: 600,
 }));
 
-// Image uploads (branding, student photos) arrive as base64 data URLs up to 1.5 MB; everything else stays at 1 MB.
+// Image uploads (branding, student and profile photos) arrive as base64 data URLs up to 1.5 MB; everything else stays at 1 MB.
 const imageJson = express.json({ limit: '3mb' });
-const STUDENT_PHOTO_PATH = /^\/api\/v1\/students\/\d+\/photo$/;
+const PHOTO_UPLOAD_PATH = /^\/api\/v1\/(students\/\d+\/photo|auth\/me\/photo)$/;
 app.use('/api/v1/system/branding', imageJson);
-app.use((req, res, next) => (STUDENT_PHOTO_PATH.test(req.path) ? imageJson(req, res, next) : next()));
+app.use((req, res, next) => (PHOTO_UPLOAD_PATH.test(req.path) ? imageJson(req, res, next) : next()));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
