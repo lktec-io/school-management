@@ -42,14 +42,15 @@ async function request(method, path, options = {}) {
   }
 }
 
-async function send(method, path, { body, params, signal, responseType = 'json' } = {}) {
+async function send(method, path, { body, formData, params, signal, responseType = 'json' } = {}) {
   let response;
   try {
     response = await fetch(buildUrl(path, params), {
       method,
       credentials: 'include',
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      // FormData sets its own multipart boundary header.
+      headers: body !== undefined && !formData ? { 'Content-Type': 'application/json' } : undefined,
+      body: formData ?? (body !== undefined ? JSON.stringify(body) : undefined),
       signal,
     });
   } catch (error) {
@@ -85,6 +86,8 @@ export const api = {
   delete: (path, options) => request('DELETE', path, options),
   blob: (path, params, options) => request('GET', path, { params, responseType: 'blob', ...options }),
   postBlob: (path, body, options) => request('POST', path, { body: body ?? {}, responseType: 'blob', ...options }),
+  /** multipart/form-data upload (e.g. photos). */
+  upload: (path, formData, method = 'POST', options) => request(method, path, { formData, ...options }),
 };
 
 /** Trigger a browser download for a Blob. */

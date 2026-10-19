@@ -26,6 +26,7 @@ export const updateSettingsHandler = asyncHandler(async (req, res) => {
     .string('phone', { max: 60 })
     .email('email')
     .string('website', { max: 150, pattern: /^https?:\/\/\S+$/i, patternMessage: 'Start with http:// or https://' })
+    .string('instagramUrl', { max: 200, pattern: /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._/?=&-]+$/, patternMessage: 'Paste the full https://www.instagram.com/... address' })
     .string('motto', { max: 150 })
     .string('headmasterName', { max: 150 })
     .string('bursarName', { max: 150 })

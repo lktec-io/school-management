@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client.js';
+import { dataUrlToBlob } from '../utils/images.js';
 
 const AuthContext = createContext(null);
 
@@ -68,7 +69,14 @@ export function AuthProvider({ children }) {
 
   /** Upload (data URL) or remove (null) the signed-in user's profile picture. */
   const updatePhoto = useCallback(async (dataUrl) => {
-    const data = dataUrl ? await api.put('/auth/me/photo', { dataUrl }) : await api.delete('/auth/me/photo');
+    let data;
+    if (dataUrl) {
+      const form = new FormData();
+      form.append('photo', dataUrlToBlob(dataUrl), dataUrl.startsWith('data:image/png') ? 'profile.png' : 'profile.jpg');
+      data = await api.upload('/auth/me/photo', form, 'PUT');
+    } else {
+      data = await api.delete('/auth/me/photo');
+    }
     setUser(data.user);
     return data.user;
   }, []);

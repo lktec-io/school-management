@@ -1,34 +1,43 @@
 import {
-  ArrowRight, BellRing, CheckCircle2, ExternalLink, FileText, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu, Monitor,
-  Phone, Receipt, ShieldCheck, Target, Telescope, Wallet, X,
+  ArrowRight, Award, BellRing, CheckCircle2, ExternalLink, FileText, FlaskConical, LayoutDashboard, LogIn, Mail,
+  MapPin, Megaphone, Menu, Microscope, Monitor, Phone, Receipt, ShieldCheck, Target, Telescope, Wallet, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Crest from '../components/layout/Crest.jsx';
+import InstagramIcon from '../components/ui/InstagramIcon.jsx';
 import LanguageSwitch from '../components/ui/LanguageSwitch.jsx';
 import LiveBadge from '../components/ui/LiveBadge.jsx';
-import { COPY, IMAGES, SLIDES, STAFF } from '../content/landing.js';
+import { COPY, IMAGES, INSTAGRAM_REELS, SLIDES, STAFF, TOURS } from '../content/landing.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
-import { formatPhone } from '../utils/format.js';
 import { isFreshNews } from '../utils/news.js';
 import '../styles/landing.css';
 
 const SECTIONS = [
   { id: 'kuhusu', key: 'overview' },
-  { id: 'michepuo', key: 'streams' },
+  { id: 'ngazi', key: 'levels' },
+  { id: 'mafanikio', key: 'achievements' },
+  { id: 'video', key: 'media' },
   { id: 'uongozi', key: 'administration' },
-  { id: 'wazazi', key: 'parents' },
   { id: 'matangazo', key: 'announcements' },
 ];
 const PARENT_ICONS = { reports: FileText, fees: Wallet, receipts: Receipt, sms: BellRing };
+const FACILITY_IMAGES = { science: IMAGES.scienceLab, practical: IMAGES.practical, computer: IMAGES.computer };
+const FACILITY_ICONS = { science: Microscope, practical: FlaskConical, computer: Monitor };
 const SLIDE_MS = 6500;
 
 function initialsOf(text = '') {
   return text.replace(/\b(Mhe|Dkt|Dr|Prof|Mwl|Mr|Mrs|Ms|Bw|Bi)\.\s*/g, '').split(/\s+/).filter((part) => /^[A-Za-z]/.test(part))
     .slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '—';
+}
+
+/** "+255 776 119 799 / +255 65 649 9288" → [{ label, tel }] for each number. */
+function phoneList(value) {
+  return String(value || '').split(/[/|,;]/).map((part) => part.trim()).filter(Boolean)
+    .map((label) => ({ label, tel: label.replace(/[^\d+]/g, '') }));
 }
 
 /** Cross-fading background photos behind the hero text (paused for reduced-motion users). */
@@ -86,7 +95,22 @@ function SectionHead({ eyebrow, title, lead, align = 'center', badge }) {
   );
 }
 
-/** Public website of the school. Every sign-in action goes to the dedicated /login page. */
+/** Instagram reel embed (Instagram's own player; it does not allow autoplay from other sites). */
+function ReelEmbed({ code, title }) {
+  return (
+    <div className="reel">
+      <iframe
+        src={`https://www.instagram.com/reel/${code}/embed/`}
+        title={title}
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    </div>
+  );
+}
+
+/** Trifonia Academy public website. Every sign-in action goes to the dedicated /login page. */
 export default function LandingPage() {
   const { status } = useAuth();
   const { i18n } = useTranslation();
@@ -97,6 +121,7 @@ export default function LandingPage() {
   const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'sw';
   const t = COPY[lang];
   const authenticated = status === 'authenticated';
+  const phones = phoneList(school?.phone);
 
   useEffect(() => {
     if (school?.name) document.title = school.name;
@@ -152,13 +177,17 @@ export default function LandingPage() {
       </header>
 
       <main id="yaliyomo">
-        {/* ---- Hero: rotating campus photos under a dark overlay --------- */}
+        {/* ---- Hero ------------------------------------------------------ */}
         <section id="mwanzo" className="hero" aria-label={t.nav.home}>
           <HeroBackground lang={lang} />
           <div className="hero__overlay" aria-hidden="true" />
           <div className="site-container hero__inner">
-            <span className="hero__eyebrow"><ShieldCheck size={15} aria-hidden="true" /> {t.registered}</span>
+            <span className="hero__eyebrow">
+              <ShieldCheck size={15} aria-hidden="true" /> {t.registered}
+              {school?.registrationNo && <> · {t.registration} <span className="mono">{school.registrationNo}</span></>}
+            </span>
             <h1 className="hero__title">{school?.name || t.hero.eyebrow}</h1>
+            {school?.motto && <p className="hero__motto">“{school.motto}”</p>}
             <p className="hero__subtitle">{t.hero.eyebrow}</p>
             <p className="hero__intro">{t.hero.intro}</p>
             <div className="hero__actions">
@@ -168,6 +197,21 @@ export default function LandingPage() {
             <ul className="hero__highlights">
               {t.hero.highlights.map((item) => <li key={item}><CheckCircle2 size={16} aria-hidden="true" /> {item}</li>)}
             </ul>
+          </div>
+        </section>
+
+        {/* ---- Admissions 2027 strip ------------------------------------- */}
+        <section className="admissions" aria-label={t.admissions.badge}>
+          <div className="site-container admissions__inner">
+            <LiveBadge>{t.admissions.badge}</LiveBadge>
+            <p className="admissions__text">{t.admissions.text}</p>
+            <div className="admissions__calls">
+              {phones.map((phone) => (
+                <a key={phone.tel} href={`tel:${phone.tel}`} className="site-btn site-btn--outline-light">
+                  <Phone size={15} aria-hidden="true" /> <span className="mono">{phone.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -203,42 +247,110 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ---- Academic streams ------------------------------------------ */}
-        <section id="michepuo" className="site-section site-section--tinted">
+        {/* ---- Levels: Nursery, Primary, Secondary ------------------------ */}
+        <section id="ngazi" className="site-section site-section--tinted">
           <div className="site-container">
-            <SectionHead eyebrow={t.streams.eyebrow} title={t.streams.title} lead={t.streams.lead} />
-            <h3 className="streams__label">{t.streams.oLevel}</h3>
+            <SectionHead eyebrow={t.levels.eyebrow} title={t.levels.title} lead={t.levels.lead} />
             <div className="stream-grid">
-              {t.streams.oStreams.map((stream) => (
-                <article key={stream.code} className="stream-card">
-                  <span className="stream-card__code mono">{stream.code}</span>
-                  <h4 className="stream-card__title">{stream.title}</h4>
-                  <p>{stream.subjects}</p>
+              {t.levels.items.map((level) => (
+                <article key={level.code} className="stream-card">
+                  <span className="stream-card__code mono">{level.code}</span>
+                  <h3 className="stream-card__title">{level.title}</h3>
+                  <p>{level.text}</p>
                 </article>
               ))}
             </div>
-            <h3 className="streams__label">{t.streams.aLevel}</h3>
+            <h3 className="streams__label">{t.levels.streamsLabel}</h3>
             <div className="combo-grid">
-              {t.streams.combinations.map((combo) => (
-                <div key={combo.code} className="combo">
-                  <span className="combo__code mono">{combo.code}</span>
-                  <span className="combo__title">{combo.title}</span>
+              {t.levels.streams.map((stream) => (
+                <div key={stream.code} className="combo">
+                  <span className="combo__code mono">{stream.title}</span>
+                  <span className="combo__title">{stream.subjects}</span>
                 </div>
               ))}
             </div>
-            <div className="ict-banner">
-              <img src={IMAGES.computer} alt={t.streams.ictAlt} loading="lazy" />
-              <div className="ict-banner__copy">
-                <span className="ict-banner__icon" aria-hidden="true"><Monitor size={20} /></span>
-                <h3>{t.streams.ictTitle}</h3>
-                <p>{t.streams.ictText}</p>
+          </div>
+        </section>
+
+        {/* ---- Achievements + educational tours --------------------------- */}
+        <section id="mafanikio" className="site-section achievements">
+          <div className="site-container">
+            <SectionHead eyebrow={t.achievements.eyebrow} title={t.achievements.title} />
+            <div className="stat-band">
+              {t.achievements.stats.map((stat) => (
+                <div key={stat.value} className="stat-band__item">
+                  <Award size={22} aria-hidden="true" />
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="tours">
+              <div className="tours__head">
+                <h3>{t.achievements.toursTitle}</h3>
+                <p>{t.achievements.toursLead}</p>
+              </div>
+              <div className="tour-grid">
+                {TOURS.map((tour) => (
+                  <figure key={tour.id} className="tour-card">
+                    <img src={tour.image} alt={tour.name} loading="lazy" />
+                    <figcaption>
+                      <strong>{tour.name}</strong>
+                      <span>{tour.note[lang]}</span>
+                    </figcaption>
+                  </figure>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
+        {/* ---- Facilities: science labs, computers ------------------------ */}
+        <section className="site-section site-section--tinted">
+          <div className="site-container">
+            <SectionHead eyebrow={t.facilities.eyebrow} title={t.facilities.title} />
+            <div className="facility-grid">
+              {t.facilities.items.map((item) => {
+                const Icon = FACILITY_ICONS[item.key];
+                return (
+                  <article key={item.key} className="facility-card">
+                    <img src={FACILITY_IMAGES[item.key]} alt={item.title} loading="lazy" />
+                    <div className="facility-card__body">
+                      <span className="facility-card__icon" aria-hidden="true"><Icon size={18} /></span>
+                      <h3>{item.title}</h3>
+                      <p>{item.text}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ---- Instagram reels ------------------------------------------- */}
+        <section id="video" className="site-section media">
+          <div className="site-container media__inner">
+            <div className="media__copy">
+              <SectionHead eyebrow={t.media.eyebrow} title={t.media.title} lead={t.media.lead} align="start" />
+              <div className="media__actions">
+                {school?.instagramUrl && (
+                  <a href={school.instagramUrl} className="site-btn site-btn--instagram" target="_blank" rel="noopener noreferrer">
+                    <InstagramIcon size={17} aria-hidden="true" /> {t.media.follow}
+                  </a>
+                )}
+                <a href={`https://www.instagram.com/reel/${INSTAGRAM_REELS[0]}/`} className="site-btn site-btn--outline" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={16} aria-hidden="true" /> {t.media.open}
+                </a>
+              </div>
+            </div>
+            <div className="media__reels">
+              {INSTAGRAM_REELS.map((code) => <ReelEmbed key={code} code={code} title={t.media.frameTitle} />)}
+            </div>
+          </div>
+        </section>
+
         {/* ---- Administrative structure ---------------------------------- */}
-        <section id="uongozi" className="site-section">
+        <section id="uongozi" className="site-section site-section--tinted">
           <div className="site-container">
             <SectionHead eyebrow={t.administration.eyebrow} title={t.administration.title} lead={t.administration.lead} />
             <div className="admin-banner" style={{ '--banner-image': `url("${IMAGES.administration}")` }}>
@@ -253,7 +365,7 @@ export default function LandingPage() {
         </section>
 
         {/* ---- Parent portal --------------------------------------------- */}
-        <section id="wazazi" className="site-section site-section--tinted">
+        <section id="wazazi" className="site-section">
           <div className="site-container parents">
             <div className="parents__copy">
               <SectionHead eyebrow={t.parents.eyebrow} title={t.parents.title} lead={t.parents.lead} align="start" />
@@ -277,7 +389,7 @@ export default function LandingPage() {
         </section>
 
         {/* ---- Announcements --------------------------------------------- */}
-        <section id="matangazo" className="site-section">
+        <section id="matangazo" className="site-section site-section--tinted">
           <div className="site-container">
             <SectionHead
               eyebrow={t.announcements.eyebrow}
@@ -338,8 +450,13 @@ export default function LandingPage() {
             <h3 className="site-footer__heading">{t.footer.contact}</h3>
             <ul className="site-footer__list">
               {school?.address && <li><MapPin size={15} aria-hidden="true" /> {school.address}</li>}
-              {school?.phone && <li><Phone size={15} aria-hidden="true" /> <a className="mono" href={`tel:${school.phone.replace(/[^\d+]/g, '')}`}>{formatPhone(school.phone)}</a></li>}
+              {phones.map((phone) => (
+                <li key={phone.tel}><Phone size={15} aria-hidden="true" /> <a className="mono" href={`tel:${phone.tel}`}>{phone.label}</a></li>
+              ))}
               {school?.email && <li><Mail size={15} aria-hidden="true" /> <a href={`mailto:${school.email}`}>{school.email}</a></li>}
+              {school?.instagramUrl && (
+                <li><InstagramIcon size={15} aria-hidden="true" /> <a href={school.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+              )}
               {school?.website && <li><ExternalLink size={15} aria-hidden="true" /> <a href={school.website} rel="noopener noreferrer">{school.website.replace(/^https?:\/\//, '')}</a></li>}
             </ul>
           </div>

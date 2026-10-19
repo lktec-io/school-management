@@ -3,8 +3,7 @@
    Tokens first, then base elements, then reusable component classes.
    ===================================================================== */
 
-/* Plus Jakarta Sans — headings, titles, stat cards
-   Inter            — body copy, forms, tables
+/* Quicksand        — every heading, title, body text, button and input
    JetBrains Mono   — money (TZS), registration/receipt numbers, marks, grades */
 
 :root {
@@ -76,8 +75,8 @@
   --color-focus-ring: #3b82f6;
 
   /* ---- Typography ------------------------------------------------- */
-  --font-heading: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-heading: "Quicksand", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-body: "Quicksand", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Mono", "Consolas", "SFMono-Regular", monospace;
 
   --text-2xs: 0.6875rem;  /* 11px — micro labels */
@@ -196,7 +195,7 @@ body {
   min-height: 100vh;
   font-family: var(--font-body);
   font-size: var(--text-base);
-  font-feature-settings: "cv11", "ss01";  /* Inter: single-storey a, open digits */
+  font-weight: 500; /* Quicksand is light; 500 keeps body text crisp on small screens */
   line-height: var(--leading-normal);
   color: var(--color-text);
   background-color: var(--color-bg);

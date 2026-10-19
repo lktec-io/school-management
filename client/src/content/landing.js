@@ -1,36 +1,52 @@
 /**
- * Public landing page content (Kiswahili / English).
+ * Trifonia Academy — public website content (Kiswahili / English).
  *
  * Editing guide:
- *  - Photos live in client/public/images/campus/ (African classrooms, Unsplash License — see
- *    CREDITS.md there). To use the school's own photos, save a JPG under the same file name
- *    (landscape, ≥1600px wide) or point IMAGES / SLIDES below at a new file.
+ *  - Photos live in client/public/images/campus/ and client/public/images/tours/ (Unsplash License —
+ *    credits in CREDITS.md there). To use the school's own photos, save a JPG under the same file
+ *    name (landscape, ≥1600px wide) or point IMAGES / SLIDES / TOURS below at a new file.
  *  - Administration photos: copy portraits to client/public/images/staff/ using the file names in
  *    STAFF (JPG, roughly 4:5). Until a photo exists, an initials frame is shown.
+ *  - Instagram: reels in INSTAGRAM_REELS are embedded on the page; the “Follow us” link comes from
+ *    School Settings → Instagram page.
+ *  - School name, registration number, motto, phones, vision, mission and the headmaster's name come
+ *    from School Settings in the portal; announcements are managed there too.
  *  - Portal and login-page labels live in src/i18n/locales/ (sw.js, en.js).
- *  - School name, contacts, vision, mission and the headmaster's name come from School Settings
- *    in the portal; announcements are managed there too.
  */
 
-// Self-hosted photos of African classrooms and staff (credits in client/public/images/campus/CREDITS.md).
 const campus = (file) => `/images/campus/${file}`;
+const tours = (file) => `/images/tours/${file}`;
 
 export const IMAGES = {
-  overview: campus('classroom-pupils.jpg'),
+  overview: campus('teacher-with-students.jpg'),
   administration: campus('teacher-chalkboard.jpg'),
   parents: campus('student-portrait.jpg'),
-  computer: campus('computer-study.jpg'),
+  scienceLab: campus('science-lab-microscope.jpg'),
+  practical: campus('science-lab-practical.jpg'),
+  computer: campus('digital-learning.jpg'),
   cta: campus('school-outreach-class.jpg'),
   login: campus('secondary-class-lesson.jpg'),
 };
 
-/** Hero background rotation: secondary students in class and with their teachers. */
+/** Hero background rotation: students in uniform, lessons, the science lab. */
 export const SLIDES = [
-  { id: 'uniform-class', image: campus('students-uniform-class.jpg'), alt: { sw: 'Wanafunzi wa sekondari katika sare za shule darasani', en: 'Secondary students in school uniform in class' } },
+  { id: 'uniform-class', image: campus('students-uniform-class.jpg'), alt: { sw: 'Wanafunzi katika sare za shule darasani', en: 'Students in school uniform in class' } },
   { id: 'lesson', image: campus('secondary-class-lesson.jpg'), alt: { sw: 'Mwalimu akifundisha darasa la sekondari', en: 'A teacher leading a secondary class' } },
+  { id: 'science', image: campus('science-lab-microscope.jpg'), alt: { sw: 'Mwanafunzi akitumia hadubini maabara', en: 'A student using a microscope in the science lab' } },
   { id: 'teacher', image: campus('teacher-with-students.jpg'), alt: { sw: 'Mwalimu akiwa na wanafunzi darasani', en: 'A teacher with students in the classroom' } },
-  { id: 'outreach', image: campus('school-outreach-class.jpg'), alt: { sw: 'Wanafunzi katika darasa lililojaa', en: 'Students in a full classroom' } },
 ];
+
+/** Educational tours and excursions. */
+export const TOURS = [
+  { id: 'kilimanjaro', image: tours('kilimanjaro.jpg'), name: 'Kilimanjaro', note: { sw: 'Mlima mrefu zaidi Afrika', en: 'Africa’s highest mountain' } },
+  { id: 'ngorongoro', image: tours('ngorongoro.jpg'), name: 'Ngorongoro', note: { sw: 'Kreta na wanyamapori', en: 'The crater and its wildlife' } },
+  { id: 'arusha', image: tours('arusha-meru.jpg'), name: 'Arusha', note: { sw: 'Mlima Meru na jiji la Arusha', en: 'Mount Meru and Arusha city' } },
+  { id: 'mikumi', image: tours('mikumi.jpg'), name: 'Mikumi', note: { sw: 'Hifadhi ya Taifa ya Mikumi', en: 'Mikumi National Park' } },
+  { id: 'bagamoyo', image: tours('bagamoyo.jpg'), name: 'Bagamoyo', note: { sw: 'Mji wa kihistoria', en: 'Historic coastal town' } },
+];
+
+/** Instagram reels embedded on the page (https://www.instagram.com/reel/<code>/). */
+export const INSTAGRAM_REELS = ['Dd_c3hOgiCW'];
 
 /** School administration (no political office holders). `nameFrom` reads a name from School Settings. */
 export const STAFF = [
@@ -49,57 +65,83 @@ const sw = {
   nav: {
     home: 'Mwanzo',
     overview: 'Kuhusu Shule',
-    streams: 'Michepuo',
+    levels: 'Ngazi za Elimu',
+    achievements: 'Mafanikio',
+    media: 'Video',
     administration: 'Uongozi',
-    parents: 'Wazazi',
     announcements: 'Matangazo',
     contact: 'Mawasiliano',
     login: 'Ingia Mfumoni',
     openPortal: 'Fungua Mfumo',
     menu: 'Menyu',
   },
+  admissions: {
+    badge: 'UDAHILI 2027',
+    text: 'Nafasi za kujiunga kwa mwaka wa masomo 2027 ziko wazi — Awali (KG), Msingi na Sekondari.',
+    call: 'Piga simu',
+  },
   hero: {
-    eyebrow: 'Elimu ya Sekondari — Kidato cha I hadi VI',
-    intro: 'Tunawalea wanafunzi wenye maarifa, nidhamu na ujasiri — kwa walimu wenye sifa, mitaala rasmi na ushirikiano wa karibu na wazazi.',
+    eyebrow: 'Elimu ya Awali, Msingi na Sekondari',
+    intro: 'Tunawalea wanafunzi wenye maarifa, nidhamu na ujasiri — kwa walimu wenye sifa, maabara za kisasa na ushirikiano wa karibu na wazazi.',
     primary: 'Ingia Mfumoni',
     secondary: 'Fahamu shule yetu',
-    highlights: ['Mitaala rasmi ya NECTA', 'Ripoti za matokeo mtandaoni', 'Taarifa kwa wazazi kwa SMS'],
-    slide: 'Picha',
+    highlights: ['Ufaulu wa 100% CSEE', 'Daraja la Kwanza (Division One)', 'Ziara za kielimu Tanzania'],
   },
   overview: {
     eyebrow: 'Kuhusu Shule',
     title: 'Mazingira bora ya kujifunzia na kukua',
-    lead: 'Shule yetu inachanganya ufundishaji makini, nidhamu na teknolojia ili kila mwanafunzi afikie uwezo wake kamili.',
+    lead: 'Trifonia Academy inachanganya ufundishaji makini, nidhamu na teknolojia ili kila mwanafunzi afikie uwezo wake kamili.',
     vision: 'Dira',
     mission: 'Dhamira',
     defaultVision: 'Kuwa kituo bora cha elimu Zanzibar kinachotoa wahitimu wenye maarifa, maadili mema na ujuzi wa kushindana kitaifa na kimataifa.',
     defaultMission: 'Kutoa elimu bora yenye kuzingatia mitaala rasmi, malezi mema na matumizi ya teknolojia, kwa kushirikiana na wazazi na jamii.',
     values: ['Uadilifu', 'Nidhamu', 'Ubora wa Kitaaluma', 'Ushirikiano'],
     valuesLabel: 'Maadili yetu',
-    imageAlt: 'Mwalimu na wanafunzi darasani',
+    imageAlt: 'Mwalimu akiwa na wanafunzi darasani',
   },
-  streams: {
-    eyebrow: 'Michepuo ya Masomo',
-    title: 'Njia ya kila mwanafunzi kufanikiwa',
-    lead: 'Kidato cha I–II hujenga msingi wa masomo yote; kuanzia Kidato cha III wanafunzi huchagua mchepuo kulingana na vipaji na malengo yao.',
-    oLevel: 'Kidato cha III–IV (CSEE)',
-    aLevel: 'Kidato cha V–VI (ACSEE)',
-    oStreams: [
-      { code: 'SAYANSI', title: 'Mchepuo wa Sayansi', subjects: 'Fizikia · Kemia · Baiolojia · Hisabati' },
-      { code: 'SANAA', title: 'Mchepuo wa Sanaa', subjects: 'Historia · Jiografia · Fasihi · Uraia' },
-      { code: 'BIASHARA', title: 'Mchepuo wa Biashara', subjects: 'Biashara · Uhasibu · Hisabati · Uraia' },
+  levels: {
+    eyebrow: 'Ngazi za Elimu',
+    title: 'Kuanzia Awali hadi Sekondari',
+    lead: 'Mwanafunzi anaweza kusoma Trifonia Academy tangu elimu ya awali hadi kuhitimu sekondari.',
+    items: [
+      { code: 'AWALI', title: 'Elimu ya Awali (Pre-Unit / KG)', text: 'Msingi imara wa kusoma, kuandika, kuhesabu na stadi za maisha katika mazingira ya upendo.' },
+      { code: 'MSINGI', title: 'Elimu ya Msingi', text: 'Masomo ya msingi kwa Kiswahili na Kiingereza, sayansi, hisabati, TEHAMA na maadili.' },
+      { code: 'SEKONDARI', title: 'Elimu ya Sekondari', text: 'Maandalizi kamili ya mitihani ya taifa (CSEE) kwa michepuo ya sayansi, biashara na sanaa.' },
     ],
-    combinations: [
-      { code: 'PCM', title: 'Fizikia, Kemia, Hisabati' },
-      { code: 'PCB', title: 'Fizikia, Kemia, Baiolojia' },
-      { code: 'CBG', title: 'Kemia, Baiolojia, Jiografia' },
-      { code: 'HGL', title: 'Historia, Jiografia, Lugha' },
-      { code: 'HKL', title: 'Historia, Kiswahili, Lugha' },
-      { code: 'EGM', title: 'Uchumi, Jiografia, Hisabati' },
+    streamsLabel: 'Michepuo ya Sekondari (Kidato cha III–IV)',
+    streams: [
+      { code: 'SAYANSI', title: 'Sayansi', subjects: 'Fizikia · Kemia · Baiolojia · Hisabati' },
+      { code: 'BIASHARA', title: 'Biashara', subjects: 'Biashara · Uhasibu · Hisabati · Uraia' },
+      { code: 'SANAA', title: 'Sanaa', subjects: 'Historia · Jiografia · Fasihi · Uraia' },
     ],
-    ictTitle: 'TEHAMA kwa kila mwanafunzi',
-    ictText: 'Mafunzo ya kompyuta kwa vitendo huwaandaa wanafunzi kwa elimu ya juu na ulimwengu wa kidijitali.',
-    ictAlt: 'Mwanafunzi akitumia kompyuta',
+  },
+  achievements: {
+    eyebrow: 'Mafanikio Yetu',
+    title: 'Matokeo yanayojieleza yenyewe',
+    stats: [
+      { value: '100%', label: 'Ufaulu katika mtihani wa taifa wa Kidato cha Nne (CSEE)' },
+      { value: 'Div. I', label: 'Wanafunzi wenye Daraja la Kwanza na heshima za kitaaluma' },
+      { value: '5', label: 'Maeneo ya ziara za kielimu: Kilimanjaro, Ngorongoro, Arusha, Mikumi na Bagamoyo' },
+    ],
+    toursTitle: 'Ziara za Kielimu',
+    toursLead: 'Masomo nje ya darasa: wanafunzi hujifunza jiografia, historia na mazingira kwa kuona.',
+  },
+  facilities: {
+    eyebrow: 'Mazingira ya Kujifunzia',
+    title: 'Maabara za sayansi na TEHAMA',
+    items: [
+      { key: 'science', title: 'Maabara ya Sayansi', text: 'Majaribio ya vitendo ya Fizikia, Kemia na Baiolojia kwa vifaa vya kisasa.' },
+      { key: 'practical', title: 'Masomo ya Vitendo', text: 'Wanafunzi hujifunza kwa kufanya — kila somo la sayansi lina vipindi vya maabara.' },
+      { key: 'computer', title: 'Chumba cha Kompyuta', text: 'Mafunzo ya kompyuta na intaneti yanayowaandaa kwa ulimwengu wa kidijitali.' },
+    ],
+  },
+  media: {
+    eyebrow: 'Trifonia Kwenye Mitandao',
+    title: 'Tazama maisha ya shule',
+    lead: 'Video fupi kutoka kwenye ukurasa wetu wa Instagram.',
+    follow: 'Tufuate Instagram',
+    open: 'Fungua kwenye Instagram',
+    frameTitle: 'Video ya Trifonia Academy kwenye Instagram',
   },
   administration: {
     eyebrow: 'Muundo wa Uongozi',
@@ -118,7 +160,7 @@ const sw = {
       { key: 'sms', title: 'Taarifa kwa SMS', text: 'Pokea uthibitisho wa malipo, matokeo na matangazo kwa simu.' },
     ],
     action: 'Ingia kama mzazi',
-    imageAlt: 'Wanafunzi wakijisomea pamoja',
+    imageAlt: 'Mwanafunzi katika sare ya shule',
   },
   announcements: {
     eyebrow: 'Matangazo',
@@ -144,27 +186,32 @@ const en = {
   nav: {
     home: 'Home',
     overview: 'About',
-    streams: 'Streams',
+    levels: 'Levels',
+    achievements: 'Achievements',
+    media: 'Videos',
     administration: 'Administration',
-    parents: 'Parents',
     announcements: 'News',
     contact: 'Contact',
     login: 'Login',
     openPortal: 'Open Portal',
     menu: 'Menu',
   },
+  admissions: {
+    badge: 'ADMISSIONS 2027',
+    text: 'Admissions are open for the 2027 academic year — Nursery (KG), Primary and Secondary.',
+    call: 'Call us',
+  },
   hero: {
-    eyebrow: 'Secondary Education — Form I to VI',
-    intro: 'We raise confident, disciplined and knowledgeable young people — with qualified teachers, the official curriculum and close partnership with parents.',
+    eyebrow: 'Nursery, Primary and Secondary Education',
+    intro: 'We raise confident, disciplined and knowledgeable young people — with qualified teachers, modern laboratories and close partnership with parents.',
     primary: 'Login to the portal',
     secondary: 'Discover our school',
-    highlights: ['Official NECTA curriculum', 'Report cards online', 'SMS updates for parents'],
-    slide: 'Photo',
+    highlights: ['100% CSEE pass rate', 'Division One honours', 'Educational tours across Tanzania'],
   },
   overview: {
     eyebrow: 'About the School',
     title: 'A great place to learn and grow',
-    lead: 'Our school combines dedicated teaching, discipline and technology so that every learner reaches their full potential.',
+    lead: 'Trifonia Academy combines dedicated teaching, discipline and technology so that every learner reaches their full potential.',
     vision: 'Vision',
     mission: 'Mission',
     defaultVision: 'To be a leading centre of learning in Zanzibar, producing graduates with knowledge, strong values and the skills to compete nationally and internationally.',
@@ -173,28 +220,49 @@ const en = {
     valuesLabel: 'Our values',
     imageAlt: 'A teacher with students in class',
   },
-  streams: {
-    eyebrow: 'Academic Streams',
-    title: 'A path to success for every learner',
-    lead: 'Forms I–II build a broad foundation; from Form III students choose a stream that matches their talents and goals.',
-    oLevel: 'Form III–IV (CSEE)',
-    aLevel: 'Form V–VI (ACSEE)',
-    oStreams: [
-      { code: 'SCIENCE', title: 'Science Stream', subjects: 'Physics · Chemistry · Biology · Mathematics' },
-      { code: 'ARTS', title: 'Arts Stream', subjects: 'History · Geography · Literature · Civics' },
-      { code: 'BUSINESS', title: 'Business Stream', subjects: 'Commerce · Book-keeping · Mathematics · Civics' },
+  levels: {
+    eyebrow: 'Levels of Education',
+    title: 'From Nursery to Secondary',
+    lead: 'A learner can study at Trifonia Academy from their first school year through to secondary graduation.',
+    items: [
+      { code: 'NURSERY', title: 'Nursery (Pre-Unit / KG)', text: 'Strong foundations in reading, writing, numeracy and life skills in a caring environment.' },
+      { code: 'PRIMARY', title: 'Primary', text: 'Core subjects in Kiswahili and English, science, mathematics, ICT and ethics.' },
+      { code: 'SECONDARY', title: 'Secondary', text: 'Complete preparation for the national CSEE in science, business and arts streams.' },
     ],
-    combinations: [
-      { code: 'PCM', title: 'Physics, Chemistry, Mathematics' },
-      { code: 'PCB', title: 'Physics, Chemistry, Biology' },
-      { code: 'CBG', title: 'Chemistry, Biology, Geography' },
-      { code: 'HGL', title: 'History, Geography, Language' },
-      { code: 'HKL', title: 'History, Kiswahili, Language' },
-      { code: 'EGM', title: 'Economics, Geography, Mathematics' },
+    streamsLabel: 'Secondary streams (Form III–IV)',
+    streams: [
+      { code: 'SCIENCE', title: 'Science', subjects: 'Physics · Chemistry · Biology · Mathematics' },
+      { code: 'BUSINESS', title: 'Business', subjects: 'Commerce · Book-keeping · Mathematics · Civics' },
+      { code: 'ARTS', title: 'Arts', subjects: 'History · Geography · Literature · Civics' },
     ],
-    ictTitle: 'ICT for every learner',
-    ictText: 'Hands-on computer lessons prepare students for higher education and a digital world.',
-    ictAlt: 'A student working on a computer',
+  },
+  achievements: {
+    eyebrow: 'Our Achievements',
+    title: 'Results that speak for themselves',
+    stats: [
+      { value: '100%', label: 'Pass rate in the national Form Four examination (CSEE)' },
+      { value: 'Div. I', label: 'Students earning Division One and academic honours' },
+      { value: '5', label: 'Educational tour destinations: Kilimanjaro, Ngorongoro, Arusha, Mikumi and Bagamoyo' },
+    ],
+    toursTitle: 'Educational Tours',
+    toursLead: 'Learning beyond the classroom: students study geography, history and the environment first-hand.',
+  },
+  facilities: {
+    eyebrow: 'Learning Facilities',
+    title: 'Science laboratories and ICT',
+    items: [
+      { key: 'science', title: 'Science Laboratory', text: 'Hands-on Physics, Chemistry and Biology practicals with modern equipment.' },
+      { key: 'practical', title: 'Practical Learning', text: 'Students learn by doing — every science subject includes laboratory sessions.' },
+      { key: 'computer', title: 'Computer Room', text: 'Computer and internet skills that prepare learners for a digital world.' },
+    ],
+  },
+  media: {
+    eyebrow: 'Trifonia Online',
+    title: 'See school life in action',
+    lead: 'Short videos from our Instagram page.',
+    follow: 'Follow us on Instagram',
+    open: 'Open on Instagram',
+    frameTitle: 'Trifonia Academy video on Instagram',
   },
   administration: {
     eyebrow: 'Administrative Structure',
@@ -213,7 +281,7 @@ const en = {
       { key: 'sms', title: 'SMS notifications', text: 'Receive payment confirmations, results and announcements by phone.' },
     ],
     action: 'Login as a parent',
-    imageAlt: 'Students studying together',
+    imageAlt: 'A student in school uniform',
   },
   announcements: {
     eyebrow: 'Announcements',

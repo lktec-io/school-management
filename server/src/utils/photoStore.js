@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import env from '../config/env.js';
+import { ApiError } from '../middleware/errorHandler.js';
 import { decodeImageDataUrl, detectImage } from './images.js';
 import logger from './logger.js';
 
@@ -18,9 +19,26 @@ function resolveStored(relativePath) {
   return absolute.startsWith(root + path.sep) ? absolute : null;
 }
 
-/** Validate (PNG/JPEG magic bytes, ≤1.5 MB) and write an uploaded data URL; returns its relative path. */
-export async function storePhoto(folder, prefix, dataUrl) {
-  const { buffer, ext } = decodeImageDataUrl(dataUrl, { maxBytes: MAX_BYTES });
+export const MAX_PHOTO_BYTES = MAX_BYTES;
+
+/** Validate raw upload bytes (multipart file) the same way as data URLs: real PNG/JPEG, ≤1.5 MB. */
+export function validatePhotoBuffer(buffer) {
+  if (!buffer?.length || buffer.length > MAX_BYTES) {
+    throw ApiError.badRequest('Image must be smaller than 1.5 MB', { photo: 'File too large or empty' });
+  }
+  const type = detectImage(buffer);
+  if (!type) throw ApiError.badRequest('The file is not a valid PNG or JPEG image', { photo: 'Unrecognised image data' });
+  return { buffer, ...type };
+}
+
+/**
+ * Write an uploaded photo — either a multipart file `{ buffer }` or a `data:image/...;base64` URL —
+ * after validating it; returns its relative path.
+ */
+export async function storePhoto(folder, prefix, upload) {
+  const { buffer, ext } = typeof upload === 'string'
+    ? decodeImageDataUrl(upload, { maxBytes: MAX_BYTES })
+    : validatePhotoBuffer(upload?.buffer);
   const dir = path.join(env.storage.dir, folder);
   await fs.mkdir(dir, { recursive: true });
   const fileName = `${prefix}-${Date.now()}.${ext}`;

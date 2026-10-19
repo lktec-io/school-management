@@ -39,6 +39,17 @@ function authConfig() {
   };
 }
 
+/**
+ * Short, non-reversible fingerprint of the loaded key pair. Compare the value printed by
+ * `npm run sms:check` with the one in the server log: if they differ, the running workers
+ * hold different credentials from server/.env.
+ */
+export function credentialFingerprint() {
+  const { apiKey, secretKey } = env.beem;
+  if (!apiKey || !secretKey) return null;
+  return crypto.createHash('sha256').update(`${apiKey}:${secretKey}`).digest('hex').slice(0, 12);
+}
+
 function mask(value) {
   if (!value) return '(missing)';
   if (value.length <= 8) return `${'*'.repeat(value.length)} (${value.length} chars)`;
@@ -57,9 +68,12 @@ export function credentialDiagnostics() {
   if (apiKey && secretKey && apiKey.length > secretKey.length) hints.push('BEEM_API_KEY is longer than BEEM_SECRET_KEY — the two values may be swapped');
   if (senderId && senderId.length > 11) hints.push('BEEM_SENDER_ID is longer than 11 characters');
   if (!senderId) hints.push('BEEM_SENDER_ID is not set');
+  hints.push('Compare the key fingerprint with `npm run sms:check` on the server: a different value means the running app loaded other credentials than server/.env (fix: pm2 reload school-system-api --update-env)');
   if (overriddenFromFile.length) hints.push(`Stale values for ${overriddenFromFile.join(', ')} in the process environment were replaced by server/.env`);
   hints.push('Copy both keys again from https://login.beem.africa → Profile → Authentication Information (SMS keys, not another product), then run: pm2 reload school-system-api --update-env');
   return {
+    fingerprint: credentialFingerprint(),
+    pid: process.pid,
     apiKey: mask(apiKey),
     secretKey: mask(secretKey),
     senderId: senderId || '(missing)',

@@ -21,8 +21,8 @@ async function start() {
   if (!isSmsConfigured()) {
     logger.warn('Beem SMS is not configured; messages will be logged as failed until BEEM_* variables are set');
   } else {
-    const { apiKey, secretKey, senderId } = credentialDiagnostics();
-    logger.info('Beem SMS configured', { apiKey, secretKey, senderId });
+    const { apiKey, secretKey, senderId, fingerprint } = credentialDiagnostics();
+    logger.info('Beem SMS configured', { apiKey, secretKey, senderId, fingerprint, pid: process.pid });
   }
   if (env.beem.overriddenFromFile.length) {
     logger.warn('Stale SMS credentials in the process environment were replaced by server/.env', { keys: env.beem.overriddenFromFile });

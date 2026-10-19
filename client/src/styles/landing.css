@@ -303,13 +303,59 @@
 .site-footer__note { margin: 0 0 var(--space-4); font-size: var(--text-sm); line-height: 1.6; }
 .site-footer__bar { padding: var(--space-4) 0; border-top: 1px solid rgba(148, 163, 184, 0.2); font-size: var(--text-xs); color: #94a3b8; }
 
-/* ICT / computer lab banner */
-.ict-banner { display: grid; overflow: hidden; margin-top: var(--space-8); border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-navy-900); color: var(--color-white); }
-.ict-banner img { width: 100%; height: 100%; min-height: 200px; max-height: 320px; object-fit: cover; }
-.ict-banner__copy { display: flex; flex-direction: column; justify-content: center; gap: var(--space-2); padding: var(--space-6); }
-.ict-banner__icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 5px; background: rgba(16, 185, 129, 0.18); color: #34d399; }
-.ict-banner h3 { margin: 0; color: var(--color-white); font-size: var(--text-xl); }
-.ict-banner p { margin: 0; color: #cbd5e1; line-height: 1.6; }
-@media (min-width: 860px) { .ict-banner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .section-head__eyebrow { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
 .notice--fresh { border-color: #fecaca; box-shadow: inset 0 0 0 1px #fecaca; }
+
+/* ---- Buttons used on dark/photo backgrounds --------------------------- */
+.site-btn--outline { border-color: var(--color-border-strong); background: var(--color-white); color: var(--color-navy-900); }
+.site-btn--outline:hover { border-color: var(--color-navy-800); color: var(--color-navy-800); }
+.site-btn--outline-light { min-height: 40px; border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.08); color: var(--color-white); }
+.site-btn--outline-light:hover { border-color: var(--color-white); color: var(--color-white); }
+.site-btn--instagram { background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); color: var(--color-white); }
+.site-btn--instagram:hover { color: var(--color-white); filter: brightness(1.05); }
+.hero__motto { margin: 0; color: #a7f3d0; font-size: var(--text-lg); font-style: italic; }
+
+/* ---- Admissions 2027 strip -------------------------------------------- */
+.admissions { background: var(--color-navy-900); color: var(--color-white); border-bottom: 1px solid rgba(148, 163, 184, 0.2); }
+.admissions__inner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); padding-top: var(--space-4); padding-bottom: var(--space-4); }
+.admissions__text { flex: 1 1 320px; margin: 0; color: #e2e8f0; font-weight: var(--weight-semibold); }
+.admissions__calls { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+@media (max-width: 520px) { .admissions__calls, .admissions__calls .site-btn { width: 100%; } }
+
+/* ---- Achievements & tours -------------------------------------------- */
+.stat-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--space-4); margin-bottom: var(--space-10); }
+.stat-band__item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-6); border: 1px solid #a7f3d0; border-radius: 5px; background: linear-gradient(180deg, #ecfdf5, var(--color-white) 75%); }
+.stat-band__item svg { color: #047857; }
+.stat-band__item strong { font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1; color: var(--color-navy-900); }
+.stat-band__item span { color: var(--color-text-secondary); font-size: var(--text-sm); line-height: 1.55; }
+.tours__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-6); margin-bottom: var(--space-4); }
+.tours__head h3 { margin: 0; font-size: var(--text-xl); color: var(--color-navy-900); }
+.tours__head p { flex: 1 1 320px; max-width: 60ch; margin: 0; color: var(--color-text-muted); }
+.tour-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--space-3); }
+.tour-card { position: relative; margin: 0; overflow: hidden; border-radius: 5px; aspect-ratio: 4 / 5; background: var(--color-navy-900); }
+.tour-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms ease; }
+.tour-card:hover img { transform: scale(1.05); }
+.tour-card figcaption { position: absolute; inset: auto 0 0; display: flex; flex-direction: column; gap: 2px; padding: var(--space-6) var(--space-4) var(--space-4); background: linear-gradient(0deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0)); color: var(--color-white); }
+.tour-card strong { font-family: var(--font-heading); font-size: var(--text-lg); }
+.tour-card span { color: #cbd5e1; font-size: var(--text-xs); }
+@media (max-width: 520px) { .tour-card { aspect-ratio: 16 / 10; } }
+@media (prefers-reduced-motion: reduce) { .tour-card img { transition: none; } .tour-card:hover img { transform: none; } }
+
+/* ---- Facilities ------------------------------------------------------- */
+.facility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-4); }
+.facility-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-white); }
+.facility-card img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.facility-card__body { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-5); }
+.facility-card__icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 5px; background: #eff6ff; color: var(--color-navy-800); }
+.facility-card h3 { margin: 0; font-size: var(--text-lg); color: var(--color-navy-900); }
+.facility-card p { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.6; }
+
+/* ---- Instagram media -------------------------------------------------- */
+.media__inner { display: grid; gap: var(--space-8); align-items: center; }
+.media__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.media__reels { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4); }
+.reel { width: min(100%, 380px); overflow: hidden; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-white); }
+.reel iframe { display: block; width: 100%; height: 760px; border: 0; }
+@media (min-width: 960px) { .media__inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (max-width: 400px) { .reel iframe { height: 680px; } }
+.section-head--start .section-head__eyebrow { justify-content: flex-start; }

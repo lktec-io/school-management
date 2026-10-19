@@ -29,3 +29,13 @@ export async function resizeImageFile(file, { maxSize = 640, quality = 0.86 } = 
     URL.revokeObjectURL(url);
   }
 }
+
+/** Turn a data URL into a Blob for multipart upload (no fetch, so the CSP never gets in the way). */
+export function dataUrlToBlob(dataUrl) {
+  const [header, base64] = dataUrl.split(',');
+  const mime = /data:([^;]+);/.exec(header)?.[1] ?? 'application/octet-stream';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}

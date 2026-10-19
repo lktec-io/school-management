@@ -28,11 +28,11 @@ router.get('/health', asyncHandler(async (req, res) => {
 // Public school identity and logo for the login page and portal branding.
 router.get('/school', asyncHandler(async (req, res) => {
   const [profile, branding] = await Promise.all([getSchoolProfile(), assetStatus()]);
-  const { name, motto, address, phone, email, website, registrationNo, headmasterName, vision, mission } = profile;
+  const { name, motto, address, phone, email, website, instagramUrl, registrationNo, headmasterName, vision, mission } = profile;
   res.json({
     success: true,
     data: {
-      name, motto, address, phone, email, website, registrationNo, headmasterName, vision, mission,
+      name, motto, address, phone, email, website, instagramUrl, registrationNo, headmasterName, vision, mission,
       hasLogo: branding.assets.logo.uploaded || Boolean(branding.assets.logo.fromEnv),
       logoVersion: branding.version,
       // Printed on every report card and receipt; shown as a preview when registering students.

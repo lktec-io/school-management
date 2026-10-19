@@ -38,9 +38,13 @@ export const logout = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Signed out successfully' });
 });
 
+/** PUT /auth/me/photo — multipart/form-data field "photo", or JSON { dataUrl }. */
 export const uploadOwnPhoto = asyncHandler(async (req, res) => {
-  const { dataUrl } = validator(req.body).string('dataUrl', { required: true, max: 3 * 1024 * 1024 }).result();
-  const user = await authService.saveOwnPhoto(req.user.id, dataUrl, auditContext(req));
+  let upload = req.file;
+  if (!upload) {
+    ({ dataUrl: upload } = validator(req.body ?? {}).string('dataUrl', { required: true, max: 3 * 1024 * 1024 }).result());
+  }
+  const user = await authService.saveOwnPhoto(req.user.id, upload, auditContext(req));
   res.json({ success: true, data: { user }, message: 'Profile picture updated' });
 });
 

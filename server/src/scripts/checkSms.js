@@ -15,6 +15,7 @@ const diagnostics = credentialDiagnostics();
 console.log('Beem SMS configuration');
 console.log(`  API key     ${diagnostics.apiKey}`);
 console.log(`  Secret key  ${diagnostics.secretKey}`);
+console.log(`  Fingerprint ${diagnostics.fingerprint ?? '(no keys)'}   <- must match "fingerprint" in the server log`);
 console.log(`  Sender ID   ${diagnostics.senderId}`);
 console.log(`  Send URL    ${diagnostics.sendUrl}`);
 console.log(`  Balance URL ${diagnostics.balanceUrl}`);

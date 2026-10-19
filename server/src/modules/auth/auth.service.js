@@ -160,11 +160,11 @@ export async function changePassword(userId, { currentPassword, newPassword }, c
   return { user: toPublicUser(updatedUser), token: signAccessToken(updatedUser) };
 }
 
-/** Replace the signed-in user's profile picture. */
-export async function saveOwnPhoto(userId, dataUrl, context) {
+/** Replace the signed-in user's profile picture (multipart file or data URL), stored in STORAGE_DIR/profiles. */
+export async function saveOwnPhoto(userId, upload, context) {
   const before = await queryOne('SELECT photo_path FROM users WHERE id = ?', [userId]);
   if (!before) throw ApiError.notFound('User not found');
-  const { relativePath, bytes } = await storePhoto('users', userId, dataUrl);
+  const { relativePath, bytes } = await storePhoto('profiles', userId, upload);
   await query('UPDATE users SET photo_path = ? WHERE id = ?', [relativePath, userId]);
   if (before.photo_path) await removePhoto(before.photo_path);
   await recordAudit({ ...context, action: 'user.photo_upload', targetTable: 'users', targetId: userId, details: { bytes, file: relativePath } });
