@@ -23,8 +23,8 @@ export default function Crest({ name = '', size = 40, inverted = false, logoSrc 
     .slice(0, 3)
     .map((word) => word[0].toUpperCase())
     .join('') || 'S';
-  const ink = inverted ? '#ffffff' : '#0b2545';
-  const accent = inverted ? '#d4af37' : '#8da9c4';
+  const ink = inverted ? '#ffffff' : '#1e3a8a';
+  const accent = inverted ? '#f59e0b' : '#94a3b8';
 
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={`${name} crest`} className="crest">

@@ -5,8 +5,8 @@ import {
 import { CHART_COLORS, compactNumber } from '../../utils/charts.js';
 import { formatMoney, formatNumber } from '../../utils/format.js';
 
-const AXIS = { fontSize: 12, fill: '#55657e' };
-const GRID = '#e5ebf2';
+const AXIS = { fontSize: 12, fill: '#64748b' };
+const GRID = '#e2e8f0';
 
 function ChartTooltip({ active, payload, label, money, labelFormatter }) {
   if (!active || !payload?.length) return null;
@@ -104,7 +104,7 @@ export function BarChartCard({ data, xKey, bars, onSelect, money = false, stacke
           <XAxis dataKey={xKey} tick={AXIS} tickLine={false} axisLine={false} interval={0} height={40}
             tickFormatter={(value) => (String(value).length > 10 ? `${String(value).slice(0, 9)}…` : value)} />
           <YAxis tick={AXIS} tickLine={false} axisLine={false} width={44} tickFormatter={compactNumber} allowDecimals={false} />
-          <Tooltip cursor={{ fill: 'rgba(11, 37, 69, 0.05)' }} content={<ChartTooltip money={money} />} />
+          <Tooltip cursor={{ fill: 'rgba(15, 23, 42, 0.04)' }} content={<ChartTooltip money={money} />} />
           {bars.length > 1 && <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />}
           {bars.map((bar, index) => (
             <Bar

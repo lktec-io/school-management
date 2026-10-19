@@ -24,7 +24,7 @@
 .gov-btn:focus-visible { outline: 3px solid var(--color-gold-500); outline-offset: 2px; }
 .gov-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .gov-btn--gold { background: var(--color-gold-500); color: var(--color-navy-900); }
-.gov-btn--gold:hover:not(:disabled) { background: #e2c25a; }
+.gov-btn--gold:hover:not(:disabled) { background: var(--color-gold-400); }
 .gov-btn--primary { background: var(--color-navy-800); color: var(--color-white); }
 .gov-btn--primary:hover:not(:disabled) { background: var(--color-slate-700); }
 .gov-btn--block { width: 100%; }
@@ -43,7 +43,7 @@
   width: 100%;
   height: 46px;
   padding: 0 var(--space-3);
-  border: 1px solid #7d8ca3;
+  border: 1px solid var(--control-border);
   border-bottom-width: 2px;
   border-radius: 0;
   background: var(--color-white);

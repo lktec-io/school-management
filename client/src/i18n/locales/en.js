@@ -306,7 +306,7 @@ const en = {
     },
   },
   login: {
-    title: 'Portal Login',
+    title: 'Sign in to the portal',
     subtitle: 'Use the email address or phone number registered with the school.',
     identifier: 'Email or phone number',
     password: 'Password',
@@ -316,7 +316,8 @@ const en = {
     submitting: 'Signing in…',
     forgot: 'Forgotten your password? Contact the school office to have it reset.',
     legal: 'Authorised use only. Activity on this portal is logged for security.',
-    backToSite: 'School website',
+    backToSite: 'Back to Home',
+    rolesLabel: 'Who can sign in',
     heroEyebrow: 'School Management Portal',
     heroTitle: 'Results, fees and school records in one secure place.',
     heroLead: 'Staff manage students, marks and finance; parents follow their children’s progress and payments.',

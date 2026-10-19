@@ -306,7 +306,7 @@ const sw = {
     },
   },
   login: {
-    title: 'Ingia Kwenye Mfumo',
+    title: 'Ingia Mfumoni',
     subtitle: 'Tumia barua pepe au namba ya simu iliyosajiliwa na shule.',
     identifier: 'Barua pepe au namba ya simu',
     password: 'Nenosiri',
@@ -316,7 +316,8 @@ const sw = {
     submitting: 'Inaingia…',
     forgot: 'Umesahau nenosiri? Wasiliana na ofisi ya shule ili kubadilishiwa.',
     legal: 'Matumizi yaliyoidhinishwa pekee. Shughuli zote kwenye mfumo huhifadhiwa kwa usalama.',
-    backToSite: 'Tovuti ya shule',
+    backToSite: 'Rudi Mwanzo',
+    rolesLabel: 'Watumiaji wa mfumo',
     heroEyebrow: 'Mfumo wa Usimamizi wa Shule',
     heroTitle: 'Matokeo, ada na kumbukumbu za shule mahali pamoja salama.',
     heroLead: 'Watumishi husimamia wanafunzi, alama na fedha; wazazi hufuatilia maendeleo na malipo ya watoto wao.',

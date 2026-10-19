@@ -15,8 +15,9 @@ const FEATURES = [
   { key: 'fees', icon: Receipt },
   { key: 'sms', icon: MessageSquareText },
 ];
+const ROLES = ['admin', 'accountant', 'teacher', 'parent'];
 
-/** Dedicated split-screen sign-in page (no modal). */
+/** Dedicated sign-in page: split screen on desktop, stacked on phones. No modal. */
 export default function LoginPage() {
   const { t } = useTranslation();
   const { status } = useAuth();
@@ -36,17 +37,21 @@ export default function LoginPage() {
     navigate(target, { replace: true });
   };
 
+  const brand = (
+    <Link to="/" className="login-brand">
+      <Crest name={school?.name || ''} size={48} inverted logoSrc={school?.logoSrc} />
+      <span>
+        <span className="login-brand__name">{school?.name || t('topbar.portal')}</span>
+        {school?.motto && <span className="login-brand__motto">“{school.motto}”</span>}
+      </span>
+    </Link>
+  );
+
   return (
     <div className="login-page">
       <aside className="login-hero">
         <div className="login-hero__inner">
-          <Link to="/" className="login-hero__brand">
-            <Crest name={school?.name || ''} size={56} inverted logoSrc={school?.logoSrc} />
-            <span>
-              <span className="login-hero__school">{school?.name || t('topbar.portal')}</span>
-              {school?.motto && <span className="login-hero__motto">“{school.motto}”</span>}
-            </span>
-          </Link>
+          {brand}
           <div className="login-hero__copy">
             <span className="login-hero__eyebrow">{t('login.heroEyebrow')}</span>
             <h2 className="login-hero__title">{t('login.heroTitle')}</h2>
@@ -72,12 +77,14 @@ export default function LoginPage() {
           <Link to="/" className="login-panel__back"><ArrowLeft size={16} aria-hidden="true" /> {t('login.backToSite')}</Link>
           <LanguageSwitch />
         </div>
+        {/* Phones: compact school banner above the form instead of the side panel. */}
+        <div className="login-mobile-brand">{brand}</div>
         <div className="login-card">
-          <div className="login-card__crest">
-            <Crest name={school?.name || ''} size={48} logoSrc={school?.logoSrc} />
-          </div>
           <h1 className="login-card__title">{t('login.title')}</h1>
           <p className="login-card__subtitle">{t('login.subtitle')}</p>
+          <ul className="login-roles" aria-label={t('login.rolesLabel')}>
+            {ROLES.map((role) => <li key={role}>{t(`roles.${role}`)}</li>)}
+          </ul>
           <LoginForm onSuccess={handleSignedIn} />
         </div>
         <p className="login-panel__copyright">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}</p>

@@ -81,26 +81,45 @@ export const SLIDES = [
 
 const sw = {
   langName: 'Kiswahili',
-  utility: {
-    registered: 'Shule Binafsi Iliyosajiliwa — Zanzibar',
-    registration: 'Usajili',
-    results: 'Matokeo',
-    fees: 'Ada na Risiti',
-    contact: 'Wasiliana Nasi',
-    language: 'Lugha',
-  },
+  registered: 'Shule Binafsi Iliyosajiliwa — Zanzibar',
+  registration: 'Namba ya Usajili',
+  skip: 'Ruka hadi maudhui',
   nav: {
     home: 'Mwanzo',
+    features: 'Huduma',
     about: 'Kuhusu Sisi',
-    academics: 'Masomo na Mitaala',
+    academics: 'Masomo',
     announcements: 'Matangazo',
-    services: 'Huduma Kidijitali',
-    login: 'Ingia Kwenye Mfumo',
+    contact: 'Mawasiliano',
+    login: 'Ingia Mfumoni',
     openPortal: 'Fungua Mfumo',
     menu: 'Menyu',
+    language: 'Lugha',
+  },
+  hero: {
+    eyebrow: 'Mfumo wa Usimamizi wa Shule',
+    intro: 'Elimu bora inayoungwa mkono na mfumo wa kisasa: matokeo, ada, risiti na mawasiliano na wazazi — yote mahali pamoja, kwa usalama.',
+    primary: 'Ingia Mfumoni',
+    secondary: 'Fahamu zaidi',
+    highlights: [
+      { value: 'Awali – Kidato 6', label: 'Ngazi za elimu' },
+      { value: 'NECTA', label: 'Mitaala rasmi' },
+      { value: 'SMS', label: 'Taarifa kwa wazazi' },
+    ],
   },
   leadership: 'Uongozi',
   slideshow: { previous: 'Picha iliyotangulia', next: 'Picha inayofuata', goTo: 'Nenda kwenye picha', pause: 'Simamisha', play: 'Endelea' },
+  features: {
+    eyebrow: 'Huduma za Mfumo',
+    title: 'Kila kitu shule inahitaji, kwenye mfumo mmoja',
+    lead: 'Walimu, uongozi, mhasibu na wazazi wanafanya kazi pamoja kwa taarifa sahihi na za wakati.',
+    items: [
+      { key: 'academic', title: 'Taaluma', text: 'Usajili wa wanafunzi, kuingiza alama, madaraja ya NECTA, nafasi darasani na ripoti rasmi za PDF.' },
+      { key: 'finance', title: 'Fedha', text: 'Mpangilio wa ada kwa darasa, malipo yenye risiti rasmi, punguzo, wadaiwa na matumizi ya shule.' },
+      { key: 'parents', title: 'Mfumo wa Wazazi', text: 'Wazazi huona salio la ada, risiti na ripoti za matokeo za watoto wao popote walipo.' },
+      { key: 'sms', title: 'Taarifa kwa SMS', text: 'Vikumbusho vya ada, uthibitisho wa malipo, matokeo na matangazo hufika moja kwa moja kwenye simu.' },
+    ],
+  },
   about: {
     eyebrow: 'Kuhusu Sisi',
     title: 'Dira, Dhamira na Maadili',
@@ -108,9 +127,7 @@ const sw = {
     vision: 'Dira',
     mission: 'Dhamira',
     values: 'Maadili ya Msingi',
-    standards: 'Viwango vya Elimu Binafsi Zanzibar',
-    readMore: 'Soma zaidi',
-    readLess: 'Funga',
+    standards: 'Viwango vya Elimu',
     defaultVision: 'Kuwa kituo bora cha elimu Zanzibar kinachotoa wahitimu wenye maarifa, maadili mema na ujuzi wa kushindana kitaifa na kimataifa.',
     defaultMission: 'Kutoa elimu bora yenye kuzingatia mitaala rasmi, malezi mema na matumizi ya teknolojia, kwa kushirikiana na wazazi na jamii.',
     valueList: [
@@ -132,8 +149,8 @@ const sw = {
     levels: [
       { code: 'AWALI', title: 'Elimu ya Awali', text: 'Msingi imara wa kusoma, kuandika, kuhesabu na stadi za maisha.' },
       { code: 'MSINGI', title: 'Elimu ya Msingi', text: 'Masomo ya msingi kwa Kiswahili na Kiingereza, sayansi, hisabati na maadili.' },
-      { code: 'O-LEVEL', title: 'Sekondari — Kidato cha 1–4', text: 'Maandalizi ya mtihani wa taifa (CSEE) kwa masomo ya sayansi, biashara na sanaa.' },
-      { code: 'A-LEVEL', title: 'Sekondari — Kidato cha 5–6', text: 'Michepuo maalum inayowaandaa wanafunzi kwa elimu ya juu (ACSEE).' },
+      { code: 'O-LEVEL', title: 'Kidato cha 1–4', text: 'Maandalizi ya mtihani wa taifa (CSEE) kwa masomo ya sayansi, biashara na sanaa.' },
+      { code: 'A-LEVEL', title: 'Kidato cha 5–6', text: 'Michepuo maalum inayowaandaa wanafunzi kwa elimu ya juu (ACSEE).' },
     ],
   },
   announcements: {
@@ -143,17 +160,10 @@ const sw = {
     error: 'Matangazo hayakuweza kupakiwa kwa sasa.',
     categories: { general: 'Jumla', admissions: 'Udahili', examinations: 'Mitihani', events: 'Matukio', fees: 'Ada' },
   },
-  services: {
-    eyebrow: 'Huduma Kidijitali',
-    title: 'Huduma za Mtandaoni',
-    lead: 'Wazazi na watumishi wanaweza kupata huduma hizi kwa kuingia kwenye mfumo wa shule.',
-    items: [
-      { key: 'results', title: 'Matokeo na Ripoti', text: 'Pakua ripoti rasmi za maendeleo ya mwanafunzi (PDF).' },
-      { key: 'fees', title: 'Ada na Risiti', text: 'Angalia salio la ada na pakua risiti rasmi za malipo.' },
-      { key: 'sms', title: 'Taarifa kwa SMS', text: 'Pokea taarifa za malipo, matokeo na matangazo kwa simu.' },
-      { key: 'staff', title: 'Mfumo wa Watumishi', text: 'Usimamizi wa wanafunzi, alama, fedha na kumbukumbu.' },
-    ],
-    action: 'Ingia',
+  cta: {
+    title: 'Fuatilia maendeleo ya mwanafunzi wakati wowote',
+    text: 'Watumishi na wazazi waliosajiliwa wanaweza kuingia kwa barua pepe au namba ya simu iliyosajiliwa na shule.',
+    button: 'Ingia Mfumoni',
   },
   footer: {
     contact: 'Mawasiliano',
@@ -165,26 +175,45 @@ const sw = {
 
 const en = {
   langName: 'English',
-  utility: {
-    registered: 'Registered Private School — Zanzibar',
-    registration: 'Reg. No',
-    results: 'Results',
-    fees: 'Fees & Receipts',
-    contact: 'Contact Us',
-    language: 'Language',
-  },
+  registered: 'Registered Private School — Zanzibar',
+  registration: 'Reg. No',
+  skip: 'Skip to content',
   nav: {
     home: 'Home',
-    about: 'About Us',
+    features: 'Features',
+    about: 'About',
     academics: 'Academics',
-    announcements: 'Announcements',
-    services: 'Digital Services',
-    login: 'Portal Login',
+    announcements: 'News',
+    contact: 'Contact',
+    login: 'Login',
     openPortal: 'Open Portal',
     menu: 'Menu',
+    language: 'Language',
+  },
+  hero: {
+    eyebrow: 'School Management Portal',
+    intro: 'Quality education backed by modern tools: results, fees, receipts and parent communication — all in one secure place.',
+    primary: 'Login to the portal',
+    secondary: 'Learn more',
+    highlights: [
+      { value: 'Nursery – Form 6', label: 'Levels of education' },
+      { value: 'NECTA', label: 'Official curriculum' },
+      { value: 'SMS', label: 'Updates for parents' },
+    ],
   },
   leadership: 'Leadership',
   slideshow: { previous: 'Previous slide', next: 'Next slide', goTo: 'Go to slide', pause: 'Pause', play: 'Play' },
+  features: {
+    eyebrow: 'Portal Features',
+    title: 'Everything the school runs on, in one system',
+    lead: 'Teachers, leadership, the bursar and parents work from the same accurate, up-to-date records.',
+    items: [
+      { key: 'academic', title: 'Academics', text: 'Student registration, marks entry, NECTA grading, class positions and official PDF report cards.' },
+      { key: 'finance', title: 'Finance', text: 'Fee structures per class, payments with official receipts, discounts, defaulters and school expenses.' },
+      { key: 'parents', title: 'Parents Portal', text: 'Parents see fee balances, receipts and their children’s report cards from anywhere.' },
+      { key: 'sms', title: 'SMS Notifications', text: 'Fee reminders, payment confirmations, results and announcements go straight to parents’ phones.' },
+    ],
+  },
   about: {
     eyebrow: 'About Us',
     title: 'Vision, Mission and Values',
@@ -192,9 +221,7 @@ const en = {
     vision: 'Vision',
     mission: 'Mission',
     values: 'Core Values',
-    standards: 'Zanzibar Private Education Standards',
-    readMore: 'Read more',
-    readLess: 'Close',
+    standards: 'Education Standards',
     defaultVision: 'To be a leading centre of learning in Zanzibar, producing graduates with knowledge, strong values and the skills to compete nationally and internationally.',
     defaultMission: 'To provide quality education built on the official curriculum, good upbringing and technology, in partnership with parents and the community.',
     valueList: [
@@ -216,8 +243,8 @@ const en = {
     levels: [
       { code: 'NURSERY', title: 'Pre-Primary', text: 'Strong foundations in reading, writing, numeracy and life skills.' },
       { code: 'PRIMARY', title: 'Primary', text: 'Core subjects in Kiswahili and English, science, mathematics and ethics.' },
-      { code: 'O-LEVEL', title: 'Secondary — Form 1–4', text: 'Preparation for the national CSEE in science, business and arts subjects.' },
-      { code: 'A-LEVEL', title: 'Secondary — Form 5–6', text: 'Specialised combinations preparing students for higher education (ACSEE).' },
+      { code: 'O-LEVEL', title: 'Form 1–4', text: 'Preparation for the national CSEE in science, business and arts subjects.' },
+      { code: 'A-LEVEL', title: 'Form 5–6', text: 'Specialised combinations preparing students for higher education (ACSEE).' },
     ],
   },
   announcements: {
@@ -227,17 +254,10 @@ const en = {
     error: 'Announcements could not be loaded right now.',
     categories: { general: 'General', admissions: 'Admissions', examinations: 'Examinations', events: 'Events', fees: 'Fees' },
   },
-  services: {
-    eyebrow: 'Digital Services',
-    title: 'Online Services',
-    lead: 'Parents and staff can use these services by signing in to the school portal.',
-    items: [
-      { key: 'results', title: 'Results & Report Cards', text: 'Download official student progress reports (PDF).' },
-      { key: 'fees', title: 'Fees & Receipts', text: 'Check fee balances and download official payment receipts.' },
-      { key: 'sms', title: 'SMS Notifications', text: 'Receive payment, results and announcement alerts by phone.' },
-      { key: 'staff', title: 'Staff Portal', text: 'Manage students, marks, finance and records.' },
-    ],
-    action: 'Sign in',
+  cta: {
+    title: 'Follow every learner’s progress, any time',
+    text: 'Registered staff and parents sign in with the email address or phone number held by the school.',
+    button: 'Login to the portal',
   },
   footer: {
     contact: 'Contact',

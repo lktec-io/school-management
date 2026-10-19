@@ -1,6 +1,6 @@
 import {
-  BellRing, BookOpenCheck, ChevronDown, ExternalLink, FileText, GraduationCap, LayoutDashboard, LogIn, Mail, Menu, MessageSquareText,
-  MapPin, Megaphone, Phone, Receipt, ShieldCheck, Target, Telescope, UsersRound, X,
+  ArrowRight, BookOpenCheck, ExternalLink, GraduationCap, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu,
+  MessageSquareText, Phone, ShieldCheck, Target, Telescope, UsersRound, Wallet, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,17 +13,16 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
 import { formatPhone } from '../utils/format.js';
-import '../styles/gov.css';
 import '../styles/landing.css';
 
 const SECTIONS = [
-  { id: 'mwanzo', key: 'home' },
+  { id: 'huduma', key: 'features' },
   { id: 'kuhusu', key: 'about' },
   { id: 'masomo', key: 'academics' },
   { id: 'matangazo', key: 'announcements' },
-  { id: 'huduma', key: 'services' },
+  { id: 'mawasiliano', key: 'contact' },
 ];
-const SERVICE_ICONS = { results: FileText, fees: Receipt, sms: MessageSquareText, staff: LayoutDashboard };
+const FEATURE_ICONS = { academic: GraduationCap, finance: Wallet, parents: UsersRound, sms: MessageSquareText };
 
 function initialsOf(name = '') {
   return name.replace(/\b(Mhe|Dkt|Dr|Prof|Mwl|H\.E)\.\s*/g, '').split(/\s+/).filter((part) => /^[A-Za-z]/.test(part))
@@ -33,51 +32,39 @@ function initialsOf(name = '') {
 function LeaderCard({ leader, name, title }) {
   const [failed, setFailed] = useState(false);
   return (
-    <figure className="leader-card">
-      <div className="leader-card__photo">
-        {failed ? (
-          <span className="leader-card__initials" aria-hidden="true">{initialsOf(name)}</span>
-        ) : (
-          <img src={leader.photo} alt={name} loading="lazy" onError={() => setFailed(true)} />
-        )}
+    <figure className="leader">
+      <div className="leader__photo">
+        {failed
+          ? <span className="leader__initials" aria-hidden="true">{initialsOf(name)}</span>
+          : <img src={leader.photo} alt={name} loading="lazy" onError={() => setFailed(true)} />}
       </div>
-      <figcaption className="leader-card__badge">
-        <span className="leader-card__name">{name}</span>
-        <span className="leader-card__title">{title}</span>
+      <figcaption>
+        <span className="leader__name">{name}</span>
+        <span className="leader__title">{title}</span>
       </figcaption>
     </figure>
   );
 }
 
-function InfoCard({ icon: Icon, title, summary, children, labels, accent }) {
-  const [open, setOpen] = useState(false);
+function SectionHead({ eyebrow, title, lead }) {
   return (
-    <article className={`info-card${accent ? ' info-card--accent' : ''}${open ? ' is-open' : ''}`}>
-      <div className="info-card__icon" aria-hidden="true"><Icon size={22} /></div>
-      <h3 className="info-card__title">{title}</h3>
-      <div className="info-card__summary">{summary}</div>
-      {children && (
-        <>
-          <div className="info-card__details" hidden={!open}>{children}</div>
-          <button type="button" className="info-card__toggle" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-            {open ? labels.readLess : labels.readMore}
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-        </>
-      )}
-    </article>
+    <header className="section-head">
+      <span className="section-head__eyebrow">{eyebrow}</span>
+      <h2 className="section-head__title">{title}</h2>
+      {lead && <p className="section-head__lead">{lead}</p>}
+    </header>
   );
 }
 
-/** Public website of the school, styled after official government portals. */
+/** Public website of the school. Every sign-in action goes to the dedicated /login page. */
 export default function LandingPage() {
   const { status } = useAuth();
-  const school = useSchoolProfile();
   const { i18n } = useTranslation();
-  const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'sw';
+  const school = useSchoolProfile();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('mwanzo');
+  const [scrolled, setScrolled] = useState(false);
   const announcements = useApi('/announcements', { limit: 6 });
+  const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'sw';
   const t = COPY[lang];
   const authenticated = status === 'authenticated';
 
@@ -85,164 +72,147 @@ export default function LandingPage() {
     if (school?.name) document.title = school.name;
   }, [school?.name]);
 
-  // Highlight the navigation link of the section currently in view.
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) setActiveSection(visible.target.id);
-    }, { rootMargin: '-45% 0px -50% 0px', threshold: [0, 0.25, 0.5] });
-    SECTIONS.forEach(({ id }) => {
-      const node = document.getElementById(id);
-      if (node) observer.observe(node);
-    });
-    return () => observer.disconnect();
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const headmasterName = school?.headmasterName;
-  const year = new Date().getFullYear();
-
-  const portalButton = authenticated ? (
-    <Link to="/dashboard" className="gov-btn gov-btn--gold">
-      <LayoutDashboard size={16} aria-hidden="true" /> {t.nav.openPortal}
-    </Link>
+  const portalLink = (className, label = t.nav.login) => (authenticated ? (
+    <Link to="/dashboard" className={className}><LayoutDashboard size={17} aria-hidden="true" /> {t.nav.openPortal}</Link>
   ) : (
-    <Link to="/login" className="gov-btn gov-btn--gold">
-      <LogIn size={16} aria-hidden="true" /> {t.nav.login}
-    </Link>
-  );
+    <Link to="/login" className={className}><LogIn size={17} aria-hidden="true" /> {label}</Link>
+  ));
+
+  const year = new Date().getFullYear();
 
   return (
     <div className="site">
-      <a href="#yaliyomo" className="skip-link">Skip to content</a>
+      <a href="#yaliyomo" className="skip-link">{t.skip}</a>
 
-      {/* ---- Utility bar ------------------------------------------------ */}
-      <div className="utility-bar">
-        <div className="site-container utility-bar__inner">
-          <div className="utility-bar__identity">
-            <ShieldCheck size={14} aria-hidden="true" />
-            <span>{t.utility.registered}</span>
-            {school?.registrationNo && (
-              <span className="utility-bar__reg">{t.utility.registration}: <span className="mono">{school.registrationNo}</span></span>
-            )}
-          </div>
-          <div className="utility-bar__contacts">
-            {school?.phone && (
-              <a href={`tel:${school.phone.replace(/[^\d+]/g, '')}`}><Phone size={13} aria-hidden="true" /><span className="mono">{formatPhone(school.phone)}</span></a>
-            )}
-            {school?.email && <a href={`mailto:${school.email}`}><Mail size={13} aria-hidden="true" />{school.email}</a>}
-          </div>
-          <nav className="utility-bar__links" aria-label="Utility">
-            <Link to={authenticated ? '/reports' : '/login'} state={authenticated ? undefined : { from: { pathname: '/reports' } }}>{t.utility.results}</Link>
-            <Link to={authenticated ? '/dashboard' : '/login'}>{t.utility.fees}</Link>
-            <a href="#mawasiliano">{t.utility.contact}</a>
-            <LanguageSwitch className="lang-switch" />
+      {/* ---- Header ------------------------------------------------------ */}
+      <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}>
+        <div className="site-container site-header__inner">
+          <a href="#mwanzo" className="site-brand" onClick={() => setMenuOpen(false)}>
+            <Crest name={school?.name || ''} size={40} logoSrc={school?.logoSrc} />
+            <span className="site-brand__text">
+              <span className="site-brand__name">{school?.name || ' '}</span>
+              {school?.motto && <span className="site-brand__motto">{school.motto}</span>}
+            </span>
+          </a>
+          <nav id="site-nav" className={`site-nav${menuOpen ? ' is-open' : ''}`} aria-label={t.nav.menu}>
+            {SECTIONS.map((section) => (
+              <a key={section.id} href={`#${section.id}`} onClick={() => setMenuOpen(false)}>{t.nav[section.key]}</a>
+            ))}
           </nav>
-        </div>
-      </div>
-
-      {/* ---- Masthead ---------------------------------------------------- */}
-      <header className="masthead">
-        <div className="site-container masthead__inner">
-          <Crest name={school?.name || ''} size={64} logoSrc={school?.logoSrc} />
-          <div className="masthead__text">
-            <span className="masthead__eyebrow">{t.utility.registered}</span>
-            <span className="masthead__name">{school?.name || ' '}</span>
-            {school?.motto && <span className="masthead__motto">“{school.motto}”</span>}
-          </div>
-          <div className="masthead__seal" aria-hidden="true">
-            <span>ZANZIBAR</span>
+          <div className="site-header__actions">
+            <LanguageSwitch />
+            {portalLink('site-btn site-btn--primary site-header__login')}
+            <button
+              type="button"
+              className="site-header__toggle"
+              aria-expanded={menuOpen}
+              aria-controls="site-nav"
+              aria-label={t.nav.menu}
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              {menuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+            </button>
           </div>
         </div>
       </header>
 
-      {/* ---- Main navigation -------------------------------------------- */}
-      <nav className="main-nav" aria-label="Main">
-        <div className="site-container main-nav__inner">
-          <button type="button" className="main-nav__toggle" aria-expanded={menuOpen} aria-controls="main-nav-links" onClick={() => setMenuOpen((value) => !value)}>
-            {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />} {t.nav.menu}
-          </button>
-          <ul id="main-nav-links" className={`main-nav__links${menuOpen ? ' is-open' : ''}`}>
-            {SECTIONS.map((section) => (
-              <li key={section.id}>
-                <a
-                  href={`#${section.id}`}
-                  className={activeSection === section.id ? 'is-active' : undefined}
-                  aria-current={activeSection === section.id ? 'location' : undefined}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {t.nav[section.key]}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <div className="main-nav__cta">{portalButton}</div>
-        </div>
-      </nav>
-
       <main id="yaliyomo">
-        {/* ---- Hero: leadership + slideshow ------------------------------ */}
-        <section id="mwanzo" className="hero site-container" aria-label={t.nav.home}>
-          <aside className="leadership" aria-label={t.leadership}>
-            <h2 className="leadership__heading">{t.leadership}</h2>
-            <div className="leadership__list">
-              {LEADERS.map((leader) => (
-                <LeaderCard
-                  key={leader.id}
-                  leader={leader}
-                  name={leader.name ?? headmasterName ?? leader.title[lang]}
-                  title={leader.title[lang]}
-                />
-              ))}
+        {/* ---- Hero ------------------------------------------------------ */}
+        <section id="mwanzo" className="hero" aria-label={t.nav.home}>
+          <div className="site-container hero__inner">
+            <div className="hero__copy">
+              <span className="hero__eyebrow"><ShieldCheck size={15} aria-hidden="true" /> {t.registered}</span>
+              <h1 className="hero__title">{school?.name || t.hero.eyebrow}</h1>
+              {school?.motto && <p className="hero__motto">“{school.motto}”</p>}
+              <p className="hero__intro">{t.hero.intro}</p>
+              <div className="hero__actions">
+                {portalLink('site-btn site-btn--accent site-btn--lg', t.hero.primary)}
+                <a href="#huduma" className="site-btn site-btn--ghost site-btn--lg">{t.hero.secondary} <ArrowRight size={17} aria-hidden="true" /></a>
+              </div>
+              <dl className="hero__highlights">
+                {t.hero.highlights.map((item) => (
+                  <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>
+                ))}
+              </dl>
             </div>
-          </aside>
-          <HeroSlideshow
-            slides={SLIDES}
-            lang={lang}
-            labels={{ ...t.slideshow, region: school?.name || t.nav.home, dots: t.slideshow.goTo }}
-          />
+            <div className="hero__media">
+              <HeroSlideshow slides={SLIDES} lang={lang} labels={{ ...t.slideshow, region: school?.name || t.nav.home, dots: t.slideshow.goTo }} />
+            </div>
+          </div>
         </section>
 
-        {/* ---- About: vision, mission, values, standards ----------------- */}
-        <section id="kuhusu" className="site-section">
+        {/* ---- Features -------------------------------------------------- */}
+        <section id="huduma" className="site-section">
           <div className="site-container">
-            <header className="section-head">
-              <span className="section-head__eyebrow">{t.about.eyebrow}</span>
-              <h2 className="section-head__title">{t.about.title}</h2>
-              <p className="section-head__lead">{t.about.lead}</p>
-            </header>
-            <div className="info-grid">
-              <InfoCard icon={Telescope} title={t.about.vision} labels={t.about} accent
-                summary={<p>{school?.vision || t.about.defaultVision}</p>} />
-              <InfoCard icon={Target} title={t.about.mission} labels={t.about}
-                summary={<p>{school?.mission || t.about.defaultMission}</p>} />
-              <InfoCard icon={UsersRound} title={t.about.values} labels={t.about}
-                summary={<p>{t.about.valueList.map((value) => value.title).join(' · ')}</p>}>
-                <ul className="info-card__list">
-                  {t.about.valueList.map((value) => <li key={value.title}><strong>{value.title}</strong> — {value.text}</li>)}
-                </ul>
-              </InfoCard>
-              <InfoCard icon={ShieldCheck} title={t.about.standards} labels={t.about}
-                summary={<p>{t.about.standardList[0]}</p>}>
-                <ul className="info-card__list">
-                  {t.about.standardList.map((item) => <li key={item}>{item}</li>)}
-                </ul>
-              </InfoCard>
+            <SectionHead eyebrow={t.features.eyebrow} title={t.features.title} lead={t.features.lead} />
+            <div className="feature-grid">
+              {t.features.items.map((feature) => {
+                const Icon = FEATURE_ICONS[feature.key] ?? BookOpenCheck;
+                return (
+                  <article key={feature.key} className="feature-card">
+                    <span className="feature-card__icon" aria-hidden="true"><Icon size={22} /></span>
+                    <h3 className="feature-card__title">{feature.title}</h3>
+                    <p>{feature.text}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ---- About ----------------------------------------------------- */}
+        <section id="kuhusu" className="site-section site-section--tinted">
+          <div className="site-container">
+            <SectionHead eyebrow={t.about.eyebrow} title={t.about.title} lead={t.about.lead} />
+            <div className="about-grid">
+              <article className="about-card about-card--accent">
+                <span className="about-card__icon" aria-hidden="true"><Telescope size={20} /></span>
+                <h3>{t.about.vision}</h3>
+                <p>{school?.vision || t.about.defaultVision}</p>
+              </article>
+              <article className="about-card">
+                <span className="about-card__icon" aria-hidden="true"><Target size={20} /></span>
+                <h3>{t.about.mission}</h3>
+                <p>{school?.mission || t.about.defaultMission}</p>
+              </article>
+              <article className="about-card">
+                <span className="about-card__icon" aria-hidden="true"><UsersRound size={20} /></span>
+                <h3>{t.about.values}</h3>
+                <ul>{t.about.valueList.map((value) => <li key={value.title}><strong>{value.title}</strong> — {value.text}</li>)}</ul>
+              </article>
+              <article className="about-card">
+                <span className="about-card__icon" aria-hidden="true"><ShieldCheck size={20} /></span>
+                <h3>{t.about.standards}</h3>
+                <ul>{t.about.standardList.map((item) => <li key={item}>{item}</li>)}</ul>
+              </article>
+            </div>
+
+            <div className="leadership">
+              <h3 className="leadership__heading">{t.leadership}</h3>
+              <div className="leadership__list">
+                {LEADERS.map((leader) => (
+                  <LeaderCard key={leader.id} leader={leader} name={leader.name ?? school?.headmasterName ?? leader.title[lang]} title={leader.title[lang]} />
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
         {/* ---- Academics ------------------------------------------------- */}
-        <section id="masomo" className="site-section site-section--tinted">
+        <section id="masomo" className="site-section">
           <div className="site-container">
-            <header className="section-head">
-              <span className="section-head__eyebrow">{t.academics.eyebrow}</span>
-              <h2 className="section-head__title">{t.academics.title}</h2>
-              <p className="section-head__lead">{t.academics.lead}</p>
-            </header>
+            <SectionHead eyebrow={t.academics.eyebrow} title={t.academics.title} lead={t.academics.lead} />
             <div className="level-grid">
-              {t.academics.levels.map((level, levelIndex) => (
+              {t.academics.levels.map((level, index) => (
                 <article key={level.code} className="level-card">
-                  <span className="level-card__index mono">{String(levelIndex + 1).padStart(2, '0')}</span>
+                  <span className="level-card__index mono">{String(index + 1).padStart(2, '0')}</span>
                   <span className="level-card__code mono">{level.code}</span>
                   <h3 className="level-card__title">{level.title}</h3>
                   <p>{level.text}</p>
@@ -253,31 +223,27 @@ export default function LandingPage() {
         </section>
 
         {/* ---- Announcements --------------------------------------------- */}
-        <section id="matangazo" className="site-section">
+        <section id="matangazo" className="site-section site-section--tinted">
           <div className="site-container">
-            <header className="section-head">
-              <span className="section-head__eyebrow">{t.announcements.eyebrow}</span>
-              <h2 className="section-head__title">{t.announcements.title}</h2>
-            </header>
+            <SectionHead eyebrow={t.announcements.eyebrow} title={t.announcements.title} />
             {announcements.error && <p className="notice-empty">{t.announcements.error}</p>}
             {announcements.data && announcements.data.length === 0 && (
               <p className="notice-empty"><Megaphone size={18} aria-hidden="true" /> {t.announcements.empty}</p>
             )}
             {announcements.data && announcements.data.length > 0 && (
-              <div className="notice-list">
+              <div className="notice-grid">
                 {announcements.data.map((item) => {
                   const date = new Date(`${item.publishedAt}T12:00:00`);
                   return (
                     <article key={item.id} className="notice">
-                      <time className="notice__date" dateTime={item.publishedAt}>
-                        <span className="notice__day mono">{String(date.getDate()).padStart(2, '0')}</span>
-                        <span className="notice__month">{date.toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { month: 'short', year: 'numeric' })}</span>
-                      </time>
-                      <div className="notice__body">
+                      <div className="notice__meta">
                         <span className="notice__category">{t.announcements.categories[item.category] ?? item.category}</span>
-                        <h3 className="notice__title">{item.title}</h3>
-                        <p className="notice__text">{item.body}</p>
+                        <time className="mono" dateTime={item.publishedAt}>
+                          {date.toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </time>
                       </div>
+                      <h3 className="notice__title">{item.title}</h3>
+                      <p className="notice__text">{item.body}</p>
                     </article>
                   );
                 })}
@@ -286,31 +252,14 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ---- Digital services ------------------------------------------ */}
-        <section id="huduma" className="site-section site-section--navy">
-          <div className="site-container">
-            <header className="section-head section-head--inverse">
-              <span className="section-head__eyebrow">{t.services.eyebrow}</span>
-              <h2 className="section-head__title">{t.services.title}</h2>
-              <p className="section-head__lead">{t.services.lead}</p>
-            </header>
-            <div className="service-grid">
-              {t.services.items.map((service) => {
-                const Icon = SERVICE_ICONS[service.key] ?? BookOpenCheck;
-                return (
-                  <article key={service.key} className="service-card">
-                    <Icon size={26} aria-hidden="true" />
-                    <h3 className="service-card__title">{service.title}</h3>
-                    <p>{service.text}</p>
-                    {authenticated ? (
-                      <Link to="/dashboard" className="service-card__action">{t.nav.openPortal} <ExternalLink size={13} aria-hidden="true" /></Link>
-                    ) : (
-                      <Link to="/login" className="service-card__action">{t.services.action} <LogIn size={13} aria-hidden="true" /></Link>
-                    )}
-                  </article>
-                );
-              })}
+        {/* ---- Call to action -------------------------------------------- */}
+        <section className="cta">
+          <div className="site-container cta__inner">
+            <div>
+              <h2 className="cta__title">{t.cta.title}</h2>
+              <p className="cta__text">{t.cta.text}</p>
             </div>
+            {portalLink('site-btn site-btn--accent site-btn--lg', t.cta.button)}
           </div>
         </section>
       </main>
@@ -319,44 +268,38 @@ export default function LandingPage() {
       <footer id="mawasiliano" className="site-footer">
         <div className="site-container site-footer__grid">
           <div className="site-footer__brand">
-            <Crest name={school?.name || ''} size={52} inverted logoSrc={school?.logoSrc} />
+            <Crest name={school?.name || ''} size={48} inverted logoSrc={school?.logoSrc} />
             <div>
               <strong>{school?.name}</strong>
               {school?.motto && <span>“{school.motto}”</span>}
+              {school?.registrationNo && <span>{t.registration}: <span className="mono">{school.registrationNo}</span></span>}
             </div>
           </div>
           <div>
             <h3 className="site-footer__heading">{t.footer.contact}</h3>
             <ul className="site-footer__list">
-              {school?.address && <li><MapPin size={14} aria-hidden="true" /> {school.address}</li>}
-              {school?.phone && <li><Phone size={14} aria-hidden="true" /> <span className="mono">{formatPhone(school.phone)}</span></li>}
-              {school?.email && <li><Mail size={14} aria-hidden="true" /> <a href={`mailto:${school.email}`}>{school.email}</a></li>}
-              {school?.website && <li><ExternalLink size={14} aria-hidden="true" /> <a href={school.website} rel="noopener noreferrer">{school.website.replace(/^https?:\/\//, '')}</a></li>}
+              {school?.address && <li><MapPin size={15} aria-hidden="true" /> {school.address}</li>}
+              {school?.phone && <li><Phone size={15} aria-hidden="true" /> <a className="mono" href={`tel:${school.phone.replace(/[^\d+]/g, '')}`}>{formatPhone(school.phone)}</a></li>}
+              {school?.email && <li><Mail size={15} aria-hidden="true" /> <a href={`mailto:${school.email}`}>{school.email}</a></li>}
+              {school?.website && <li><ExternalLink size={15} aria-hidden="true" /> <a href={school.website} rel="noopener noreferrer">{school.website.replace(/^https?:\/\//, '')}</a></li>}
             </ul>
           </div>
           <div>
             <h3 className="site-footer__heading">{t.footer.quickLinks}</h3>
             <ul className="site-footer__list">
-              {SECTIONS.slice(1).map((section) => <li key={section.id}><a href={`#${section.id}`}>{t.nav[section.key]}</a></li>)}
+              {SECTIONS.slice(0, 4).map((section) => <li key={section.id}><a href={`#${section.id}`}>{t.nav[section.key]}</a></li>)}
             </ul>
           </div>
           <div>
             <h3 className="site-footer__heading">{t.footer.portal}</h3>
-            <ul className="site-footer__list">
-              <li><GraduationCap size={14} aria-hidden="true" /> {t.services.items[0].title}</li>
-              <li><Receipt size={14} aria-hidden="true" /> {t.services.items[1].title}</li>
-              <li><BellRing size={14} aria-hidden="true" /> {t.services.items[2].title}</li>
-            </ul>
-            {portalButton}
+            <p className="site-footer__note">{t.cta.text}</p>
+            {portalLink('site-btn site-btn--accent')}
           </div>
         </div>
         <div className="site-footer__bar">
-          <div className="site-container">
-            © <span className="mono">{year}</span> {school?.name}. {t.footer.rights}
-          </div>
+          <div className="site-container">© <span className="mono">{year}</span> {school?.name}. {t.footer.rights}</div>
         </div>
       </footer>
-
     </div>
   );
 }

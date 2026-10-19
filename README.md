@@ -35,27 +35,40 @@ For a **private** repository, first add a deploy key: run `ssh-keygen -t ed25519
 add `~/.ssh/id_ed25519.pub` under *GitHub → repository → Settings → Deploy keys*, then clone with the
 `git@github.com:<your-account>/<your-repo>.git` address.
 
-### 3. Run the one-click deployment
+### 3. One-time server setup
+`deploy.sh` only updates an existing installation, so a brand-new server needs these steps once:
 ```bash
-sudo ./deploy.sh --email it@clixworks.co.tz --school-name "Al-Noor Academy Zanzibar" --enable-firewall
-```
-On the first run the script:
-1. installs Node.js 20, MySQL 8, Nginx, PM2 and Certbot if they are missing;
-2. creates the database with a generated password and writes `server/.env` (generated JWT secret, `DOMAIN=school.clixworks.co.tz`);
-3. installs dependencies, runs the migrations and builds the React app into `client/dist`;
-4. obtains the Let's Encrypt certificate for `school.clixworks.co.tz` and installs `nginx.conf` (HTTP → HTTPS);
-5. starts `school-system-api` under PM2 (2 cluster workers, as the unprivileged `schoolapp` user);
-6. schedules the daily 02:30 backup;
-7. finishes with a health check against `http://127.0.0.1:5000` and `https://school.clixworks.co.tz/api/v1/health`.
+# Node.js 20, MySQL 8, Nginx, PM2, Certbot
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs mysql-server nginx certbot
+adduser --disabled-password --gecos "" schoolapp && chown -R schoolapp:schoolapp /var/www/school-system
+npm install -g pm2 && pm2 startup systemd -u schoolapp --hp /home/schoolapp
 
-### 4. SSL certificate (Certbot)
-`deploy.sh` requests the certificate automatically. Run Certbot yourself only if DNS was not ready during
-the first deploy, or to renew/inspect it:
+# Database and user (choose a strong password)
+mysql -e "CREATE DATABASE school_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          CREATE USER 'school_app'@'localhost' IDENTIFIED BY 'STRONG_PASSWORD';
+          GRANT ALL ON school_management.* TO 'school_app'@'localhost';"
+
+# Environment: copy the template and fill in DB_*, JWT_SECRET (openssl rand -hex 64), DOMAIN, BEEM_*
+sudo -u schoolapp cp server/.env.example server/.env && sudo -u schoolapp nano server/.env
+
+# HTTPS + Nginx
+certbot certonly --webroot -w /var/www/certbot -d school.clixworks.co.tz --agree-tos -m it@clixworks.co.tz
+cp nginx.conf /etc/nginx/sites-available/school-system
+ln -sf /etc/nginx/sites-available/school-system /etc/nginx/sites-enabled/ && nginx -t && systemctl reload nginx
+
+# Daily 02:30 database backup
+echo "30 2 * * * schoolapp /var/www/school-system/server/bin/backup-db.sh" > /etc/cron.d/school-backup
+
+# First deploy (installs, migrates, builds and starts PM2)
+RUN_AS=schoolapp ./deploy.sh
+```
+`nginx.conf` serves `/var/www/school-system/client/dist`; if the app lives elsewhere (for example
+`/var/www/school-management`), change the `root` line to match before copying it.
+
+### 4. SSL renewal
 ```bash
-sudo certbot certonly --webroot -w /var/www/certbot -d school.clixworks.co.tz \
-     --email it@clixworks.co.tz --agree-tos --no-eff-email --deploy-hook "systemctl reload nginx"
-sudo ./deploy.sh --no-pull            # installs the HTTPS site configuration
-sudo certbot renew --dry-run          # confirm automatic renewal works
+certbot renew --dry-run          # confirm automatic renewal works
 ```
 
 ### 5. Create the Headmaster account
@@ -63,7 +76,7 @@ sudo certbot renew --dry-run          # confirm automatic renewal works
 cd /var/www/school-system/server
 sudo -u schoolapp npm run create-admin -- --name "Headmaster Name" --email head@clixworks.co.tz
 ```
-Note the one-time temporary password. Sign in at **https://school.clixworks.co.tz** → *Ingia Kwenye Mfumo*;
+Note the one-time temporary password. Sign in at **https://school.clixworks.co.tz** → *Ingia Mfumoni*;
 you will be asked to change the password immediately.
 
 ### 6. Enable SMS (Beem Africa)
@@ -79,7 +92,7 @@ sudo -u schoolapp pm2 reload school-system-api --update-env
 
 ### Public website content
 - **Leadership photos:** copy official portraits (JPG, portrait orientation) to `client/public/images/leaders/`
-  as `rais-jmt.jpg`, `rais-zanzibar.jpg` and `mkuu-wa-shule.jpg`, then run `sudo ./deploy.sh`. Until a photo
+  as `rais-jmt.jpg`, `rais-zanzibar.jpg` and `mkuu-wa-shule.jpg`, then run `./deploy.sh`. Until a photo
   exists, an initials frame is shown.
 - **Slideshow, names, titles and other text:** edit `client/src/content/landing.js` (Kiswahili and English).
 - **Vision, mission, contacts and announcements:** managed in the portal under **School Settings** (no redeploy needed).
@@ -88,12 +101,16 @@ sudo -u schoolapp pm2 reload school-system-api --update-env
 
 ## Updating to a new version
 ```bash
-cd /var/www/school-system
-sudo ./deploy.sh
+cd /var/www/school-system          # your checkout
+RUN_AS=schoolapp ./deploy.sh       # or ./deploy.sh when already logged in as schoolapp
 ```
-This pulls the latest `main` from GitHub, installs dependencies, runs new migrations, rebuilds the frontend,
-reloads PM2 with zero downtime, tests and reloads Nginx, and prints the health-check result.
-Use `--branch <name>` to deploy another branch, or `--no-pull` to deploy the files on disk.
+The script is silent and non-interactive. It does exactly five things, stopping at the first failure
+(nothing is reloaded unless every step succeeded):
+1. `git pull --ff-only origin main` (restarting itself if `deploy.sh` was updated);
+2. `npm ci` for the server and client, skipped when `package-lock.json` is unchanged;
+3. `npm run db:migrate`;
+4. `npm run build` in `client`;
+5. `pm2 reload school-system-api --update-env` (or a first `pm2 start` from `ecosystem.config.js`).
 
 ## Backups and restore
 - **Automatic:** daily at 02:30 to `server/storage/backups/*.sql.gz` (14 days kept). Log: `/var/log/school-system/backup.log`.

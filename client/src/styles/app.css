@@ -78,7 +78,7 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: calc(var(--z-overlay) - 1);
-  background: rgba(7, 26, 51, 0.45);
+  background: rgba(15, 23, 42, 0.45);
 }
 
 .app-topbar__left,
@@ -220,8 +220,8 @@ kbd {
 .top-progress.is-visible { opacity: 1; }
 .top-progress__bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-gold-500), #f0cf5b);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.7);
+  background: linear-gradient(90deg, var(--color-gold-500), #fbbf24);
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.7);
   transform-origin: left center;
   transition: transform 250ms ease;
 }
@@ -971,7 +971,7 @@ button.donut__item:focus-visible { outline: none; box-shadow: var(--shadow-focus
 .status-list__link:hover .mono { color: var(--color-slate-700); text-decoration: underline; }
 
 .class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
-.class-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-5); border: 1px solid #dde4ec; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); }
+.class-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); }
 .class-card__tag { align-self: flex-start; }
 .class-card__title { margin: 0; font-size: var(--text-md); }
 .class-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; }
@@ -988,7 +988,7 @@ button.donut__item:focus-visible { outline: none; box-shadow: var(--shadow-focus
   color: var(--color-steel-200);
   box-shadow: var(--shadow-raised);
 }
-.balance-banner--clear { background: linear-gradient(120deg, #17633a, var(--color-success)); color: #d9f2e3; }
+.balance-banner--clear { background: linear-gradient(120deg, #065f46, var(--color-success)); color: #d1fae5; }
 .balance-banner__amount { font-family: var(--font-mono); font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-white); }
 .balance-banner .btn--outline { border-color: rgba(255, 255, 255, 0.5); background: transparent; color: var(--color-white); }
 
@@ -1176,7 +1176,7 @@ button.donut__item:focus-visible { outline: none; box-shadow: var(--shadow-focus
 /* ---- Student register / edit form ------------------------------------ */
 .student-form { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-5); align-items: start; }
 .student-form__aside { position: sticky; top: calc(var(--layout-topbar-height) + var(--space-4)); display: flex; flex-direction: column; gap: var(--space-4); }
-.form-section__head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid #e8edf3; }
+.form-section__head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); }
 .form-section__step {
   display: grid;
   flex-shrink: 0;
@@ -1240,3 +1240,113 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
 /* ---- Parent dashboard ------------------------------------------------ */
 .balance-banner__eyebrow { font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-caps); text-transform: uppercase; opacity: 0.85; }
 .child-portal__head > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+/* =====================================================================
+   Mobile layer (≤ 640px): 44px touch targets, sheet-style modals,
+   sticky primary actions, and guards against horizontal overflow.
+   ===================================================================== */
+.app-main { min-width: 0; }
+.app-main img, .app-main svg { max-width: 100%; }
+.page-header > div { min-width: 0; }
+.page-header__title { overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  :root {
+    --control-height: 44px;
+    --control-height-sm: 44px;
+  }
+  html, body { overflow-x: hidden; }
+  .app-main { padding: var(--space-4) var(--space-4) var(--space-10); }
+  .form-control, select.form-control, textarea.form-control { font-size: 16px; } /* no iOS zoom on focus */
+  .btn { min-height: 44px; }
+  .btn--icon, .btn--icon.btn--sm { width: 44px; min-width: 44px; }
+  .page-header { gap: var(--space-3); }
+  .page-header__actions { width: 100%; }
+  .page-header__actions > .btn, .page-header__actions > a.btn { flex: 1 1 auto; }
+  .button-row { flex-wrap: wrap; }
+  .card__header { padding: var(--space-3) var(--space-4); }
+  .card__body { padding: var(--space-4); }
+  .filter-panel { padding: var(--space-4); }
+  .filter-panel__row { grid-template-columns: minmax(0, 1fr); }
+  .filter-bar > .form-control, .filter-bar > select, .filter-bar__search, .filter-bar__field { flex: 1 1 100%; min-width: 0; width: 100%; }
+  .segmented { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); width: 100%; }
+  .segmented__item { min-height: 44px; border-bottom: 1px solid var(--control-border); }
+  .pagination { justify-content: center; text-align: center; }
+  .pagination__controls { width: 100%; justify-content: space-between; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs__tab { flex-shrink: 0; min-height: 44px; }
+  .form-check { min-height: 44px; }
+  .form-check input[type="checkbox"], .form-check input[type="radio"] { width: 20px; height: 20px; }
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .kpi-grid .stat-tile { padding: var(--space-4); }
+  .kpi-grid .stat-tile__value.mono { font-size: var(--text-xl); }
+  .kpi-grid .stat-tile__icon { width: 30px; height: 30px; }
+  .term-badge { padding: 0 var(--space-2); }
+  .user-menu__identity { display: none; }
+
+  /* Modals become bottom sheets with the action bar pinned to the bottom. */
+  .modal-backdrop { place-items: end stretch; padding: 0; }
+  .modal, .modal--lg, .modal--sm {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+  }
+  .modal__body { padding: var(--space-4); }
+  .modal__footer {
+    position: sticky;
+    bottom: 0;
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .modal__footer .btn { flex: 1 1 140px; }
+
+  /* Student form: save/cancel stay reachable at the bottom of the screen. */
+  .student-form__aside { display: contents; }
+  .student-form__aside > .card:first-child { order: -1; }
+  .student-form__aside > .card:last-child {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    order: 10;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.1);
+  }
+  .student-form__aside > .card:last-child .card__body { padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom)); }
+  .student-form__aside > .card:last-child .regno-preview,
+  .student-form__aside > .card:last-child p { display: none; }
+  .student-form__aside > .card:last-child .stack { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .student-form__aside > .card:last-child .btn--primary { order: 2; }
+  .form-grid--2, .form-grid--3 { grid-template-columns: minmax(0, 1fr); }
+  .form-grid .span-2 { grid-column: auto; }
+  .choice { min-height: 44px; }
+
+  /* Tables that are not converted to cards scroll inside their card, never the page. */
+  .table-wrapper { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+}
+@media (max-width: 360px) {
+  .kpi-grid { grid-template-columns: minmax(0, 1fr); }
+  .app-topbar__lang .lang-toggle__icon { display: none; }
+  .term-badge { display: none; }
+}
+
+/* Top bar: the school name truncates first; actions never leave the screen. */
+.app-topbar__left { flex: 1 1 auto; }
+.app-topbar__right { flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .app-topbar { gap: var(--space-2); }
+  .app-topbar__left, .app-topbar__right { gap: var(--space-2); }
+  .user-menu__trigger { padding: 2px; }
+  .user-menu__trigger > svg { display: none; }
+  .app-topbar__menu { width: 44px; height: 44px; }
+}
+@media (max-width: 480px) {
+  .term-badge { display: none; }
+  .app-topbar__school { font-size: var(--text-sm); }
+}
+/* Larger tap areas for chips, donut legend items and the landing language toggle. */
+@media (max-width: 640px) {
+  .chip { min-height: 44px; padding: 0.25rem 0.75rem; }
+  .donut__item { min-height: 44px; }
+  .lang-toggle button { min-width: 44px; height: 44px; }
+}
