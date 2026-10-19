@@ -220,8 +220,8 @@ kbd {
 .top-progress.is-visible { opacity: 1; }
 .top-progress__bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-gold-500), #fbbf24);
-  box-shadow: 0 0 8px rgba(217, 119, 6, 0.7);
+  background: linear-gradient(90deg, var(--color-gold-500), #34d399);
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.7);
   transform-origin: left center;
   transition: transform 250ms ease;
 }
@@ -241,7 +241,7 @@ kbd {
   width: 56px;
   height: 56px;
   margin-bottom: var(--space-1);
-  border-radius: 50%;
+  border-radius: 5px;
   background: var(--color-surface-sunken);
   color: var(--color-slate-700);
 }
@@ -847,7 +847,7 @@ kbd {
   position: relative;
   max-width: 420px;
   padding: var(--space-3) var(--space-4);
-  border-radius: 14px 14px 14px 4px;
+  border-radius: 5px 5px 5px 4px;
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
   font-size: var(--text-sm);
@@ -1183,7 +1183,7 @@ button.donut__item:focus-visible { outline: none; box-shadow: var(--shadow-focus
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: 5px;
   background: var(--color-navy-800);
   color: var(--color-gold-500);
   font-size: var(--text-xs);
@@ -1290,7 +1290,7 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
   .modal, .modal--lg, .modal--sm {
     width: 100%;
     max-height: 92dvh;
-    border-radius: 18px 18px 0 0;
+    border-radius: 5px 5px 0 0;
   }
   .modal__body { padding: var(--space-4); }
   .modal__footer {
@@ -1309,7 +1309,7 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
     bottom: 0;
     z-index: 5;
     order: 10;
-    border-radius: 16px 16px 0 0;
+    border-radius: 5px 5px 0 0;
     box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.1);
   }
   .student-form__aside > .card:last-child .card__body { padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom)); }
@@ -1350,3 +1350,9 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
   .donut__item { min-height: 44px; }
   .lang-toggle button { min-width: 44px; height: 44px; }
 }
+
+/* ---- Confirmation dialog (replaces window.confirm) -------------------- */
+.confirm-body { display: flex; align-items: flex-start; gap: var(--space-3); }
+.confirm-body p { margin: 0; color: var(--color-text-secondary); line-height: 1.6; }
+.confirm-body__icon { display: grid; flex-shrink: 0; place-items: center; width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-info-bg); color: var(--color-info); }
+.confirm-body--danger .confirm-body__icon { background: var(--color-danger-bg); color: var(--color-danger); }

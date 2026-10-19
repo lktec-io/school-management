@@ -34,11 +34,11 @@ export default function BursarDashboard({ data, onChanged }) {
       <div className="kpi-grid">
         <StatTile label={t('dash.todayInflow')} value={fees ? formatMoney(fees.todayAmount) : '—'} icon={Banknote} mono tone="success"
           to="/finance/payments" meta={fees ? <span className="mono">{t('dash.paymentsToday', { count: fees.todayPayments })}</span> : null} />
-        <StatTile label={t('dash.collectedTerm')} value={fees ? formatMoney(fees.collected) : '—'} icon={Wallet} mono to="/finance"
+        <StatTile label={t('dash.collectedTerm')} value={fees ? formatMoney(fees.collected) : '—'} icon={Wallet} mono tone="success" to="/finance"
           meta={fees ? <><span className="mono">{formatPercent(fees.collectionRate)}</span> {t('dash.ofBills')}</> : null} />
-        <StatTile label={t('dash.unpaidBills')} value={formatMoney(unpaid?.amount ?? 0)} icon={TriangleAlert} mono tone="danger"
+        <StatTile label={t('dash.unpaidBills')} value={formatMoney(unpaid?.amount ?? 0)} icon={TriangleAlert} mono tone="warning"
           to="/finance/defaulters" meta={t('dash.studentsOwing', { count: unpaid?.students ?? 0 })} />
-        <StatTile label={t('dash.expensesMonth')} value={formatMoney(thisMonth?.expenses ?? 0)} icon={TrendingDown} mono tone="warning"
+        <StatTile label={t('dash.expensesMonth')} value={formatMoney(thisMonth?.expenses ?? 0)} icon={TrendingDown} mono tone="danger"
           to="/finance/expenses" meta={<>{t('dash.income')} <span className="mono">TZS {formatMoney(thisMonth?.income ?? 0)}</span></>} />
       </div>
 

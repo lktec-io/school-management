@@ -1,23 +1,19 @@
-import { ArrowLeft, FileText, MessageSquareText, Receipt, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm.jsx';
 import Crest from '../components/layout/Crest.jsx';
 import LanguageSwitch from '../components/ui/LanguageSwitch.jsx';
+import { IMAGES } from '../content/landing.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
 import '../styles/gov.css';
 import '../styles/login.css';
 
-const FEATURES = [
-  { key: 'results', icon: FileText },
-  { key: 'fees', icon: Receipt },
-  { key: 'sms', icon: MessageSquareText },
-];
 const ROLES = ['admin', 'accountant', 'teacher', 'parent'];
 
-/** Dedicated sign-in page: split screen on desktop, stacked on phones. No modal. */
+/** Sign-in page: full-screen campus photo under a dark overlay with a centred, translucent card. */
 export default function LoginPage() {
   const { t } = useTranslation();
   const { status } = useAuth();
@@ -37,58 +33,38 @@ export default function LoginPage() {
     navigate(target, { replace: true });
   };
 
-  const brand = (
-    <Link to="/" className="login-brand">
-      <Crest name={school?.name || ''} size={48} inverted logoSrc={school?.logoSrc} />
-      <span>
-        <span className="login-brand__name">{school?.name || t('topbar.portal')}</span>
-        {school?.motto && <span className="login-brand__motto">“{school.motto}”</span>}
-      </span>
-    </Link>
-  );
-
   return (
-    <div className="login-page">
-      <aside className="login-hero">
-        <div className="login-hero__inner">
-          {brand}
-          <div className="login-hero__copy">
-            <span className="login-hero__eyebrow">{t('login.heroEyebrow')}</span>
-            <h2 className="login-hero__title">{t('login.heroTitle')}</h2>
-            <p className="login-hero__lead">{t('login.heroLead')}</p>
-          </div>
-          <ul className="login-hero__features">
-            {FEATURES.map(({ key, icon: Icon }) => (
-              <li key={key}>
-                <span className="login-hero__feature-icon" aria-hidden="true"><Icon size={18} /></span>
-                <span>
-                  <strong>{t(`login.features.${key}.title`)}</strong>
-                  <span>{t(`login.features.${key}.text`)}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="login-hero__footer"><ShieldCheck size={14} aria-hidden="true" /> {t('login.legal')}</p>
-        </div>
-      </aside>
+    <div className="login-page" style={{ '--login-image': `url("${IMAGES.login}")` }}>
+      <div className="login-page__overlay" aria-hidden="true" />
 
-      <main className="login-panel">
-        <div className="login-panel__top">
-          <Link to="/" className="login-panel__back"><ArrowLeft size={16} aria-hidden="true" /> {t('login.backToSite')}</Link>
-          <LanguageSwitch />
-        </div>
-        {/* Phones: compact school banner above the form instead of the side panel. */}
-        <div className="login-mobile-brand">{brand}</div>
+      <header className="login-topbar">
+        <Link to="/" className="login-topbar__back"><ArrowLeft size={16} aria-hidden="true" /> {t('login.backToSite')}</Link>
+        <LanguageSwitch className="login-topbar__lang" />
+      </header>
+
+      <main className="login-main">
         <div className="login-card">
+          <Link to="/" className="login-card__brand">
+            <Crest name={school?.name || ''} size={56} logoSrc={school?.logoSrc} />
+            <span className="login-card__school">{school?.name || t('topbar.portal')}</span>
+            {school?.motto && <span className="login-card__motto">“{school.motto}”</span>}
+          </Link>
+
+          <div className="login-card__divider" />
+
           <h1 className="login-card__title">{t('login.title')}</h1>
           <p className="login-card__subtitle">{t('login.subtitle')}</p>
           <ul className="login-roles" aria-label={t('login.rolesLabel')}>
             {ROLES.map((role) => <li key={role}>{t(`roles.${role}`)}</li>)}
           </ul>
+
           <LoginForm onSuccess={handleSignedIn} />
+
+          <p className="login-card__legal"><ShieldCheck size={14} aria-hidden="true" /> {t('login.legal')}</p>
         </div>
-        <p className="login-panel__copyright">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}</p>
       </main>
+
+      <footer className="login-footer">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}</footer>
     </div>
   );
 }

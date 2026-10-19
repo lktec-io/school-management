@@ -1,14 +1,13 @@
 import {
-  ArrowRight, BookOpenCheck, ExternalLink, GraduationCap, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu,
-  MessageSquareText, Phone, ShieldCheck, Target, Telescope, UsersRound, Wallet, X,
+  ArrowRight, BellRing, CheckCircle2, ExternalLink, FileText, LayoutDashboard, LogIn, Mail, MapPin, Megaphone, Menu,
+  Phone, Receipt, ShieldCheck, Target, Telescope, Wallet, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Crest from '../components/layout/Crest.jsx';
-import HeroSlideshow from '../components/landing/HeroSlideshow.jsx';
 import LanguageSwitch from '../components/ui/LanguageSwitch.jsx';
-import { COPY, LEADERS, SLIDES } from '../content/landing.js';
+import { COPY, IMAGES, SLIDES, STAFF } from '../content/landing.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
@@ -16,39 +15,68 @@ import { formatPhone } from '../utils/format.js';
 import '../styles/landing.css';
 
 const SECTIONS = [
-  { id: 'huduma', key: 'features' },
-  { id: 'kuhusu', key: 'about' },
-  { id: 'masomo', key: 'academics' },
+  { id: 'kuhusu', key: 'overview' },
+  { id: 'michepuo', key: 'streams' },
+  { id: 'uongozi', key: 'administration' },
+  { id: 'wazazi', key: 'parents' },
   { id: 'matangazo', key: 'announcements' },
-  { id: 'mawasiliano', key: 'contact' },
 ];
-const FEATURE_ICONS = { academic: GraduationCap, finance: Wallet, parents: UsersRound, sms: MessageSquareText };
+const PARENT_ICONS = { reports: FileText, fees: Wallet, receipts: Receipt, sms: BellRing };
+const SLIDE_MS = 6500;
 
-function initialsOf(name = '') {
-  return name.replace(/\b(Mhe|Dkt|Dr|Prof|Mwl|H\.E)\.\s*/g, '').split(/\s+/).filter((part) => /^[A-Za-z]/.test(part))
+function initialsOf(text = '') {
+  return text.replace(/\b(Mhe|Dkt|Dr|Prof|Mwl|Mr|Mrs|Ms|Bw|Bi)\.\s*/g, '').split(/\s+/).filter((part) => /^[A-Za-z]/.test(part))
     .slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '—';
 }
 
-function LeaderCard({ leader, name, title }) {
-  const [failed, setFailed] = useState(false);
+/** Cross-fading background photos behind the hero text (paused for reduced-motion users). */
+function HeroBackground({ lang }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (SLIDES.length < 2 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = setInterval(() => {
+      if (!document.hidden) setIndex((current) => (current + 1) % SLIDES.length);
+    }, SLIDE_MS);
+    return () => clearInterval(timer);
+  }, []);
   return (
-    <figure className="leader">
-      <div className="leader__photo">
-        {failed
-          ? <span className="leader__initials" aria-hidden="true">{initialsOf(name)}</span>
-          : <img src={leader.photo} alt={name} loading="lazy" onError={() => setFailed(true)} />}
-      </div>
-      <figcaption>
-        <span className="leader__name">{name}</span>
-        <span className="leader__title">{title}</span>
-      </figcaption>
-    </figure>
+    <div className="hero__bg" aria-hidden="true">
+      {SLIDES.map((slide, slideIndex) => (
+        <img
+          key={slide.id}
+          src={slide.image}
+          alt={slide.alt[lang]}
+          className={slideIndex === index ? 'is-active' : undefined}
+          loading={slideIndex === 0 ? 'eager' : 'lazy'}
+          fetchPriority={slideIndex === 0 ? 'high' : undefined}
+        />
+      ))}
+    </div>
   );
 }
 
-function SectionHead({ eyebrow, title, lead }) {
+function StaffCard({ member, name, lang }) {
+  const [failed, setFailed] = useState(false);
+  const role = member.role[lang];
   return (
-    <header className="section-head">
+    <article className="staff-card">
+      <div className="staff-card__photo">
+        {/* Initials sit underneath; the portrait covers them once it loads (and is dropped if missing). */}
+        <span className="staff-card__initials" aria-hidden="true">{initialsOf(name || role)}</span>
+        {!failed && <img src={member.photo} alt={name || role} loading="lazy" onError={() => setFailed(true)} />}
+      </div>
+      <div className="staff-card__body">
+        <span className="staff-card__role">{role}</span>
+        {name && <span className="staff-card__name">{name}</span>}
+        <span className="staff-card__duty">{member.duty[lang]}</span>
+      </div>
+    </article>
+  );
+}
+
+function SectionHead({ eyebrow, title, lead, align = 'center' }) {
+  return (
+    <header className={`section-head section-head--${align}`}>
       <span className="section-head__eyebrow">{eyebrow}</span>
       <h2 className="section-head__title">{title}</h2>
       {lead && <p className="section-head__lead">{lead}</p>}
@@ -84,8 +112,6 @@ export default function LandingPage() {
   ) : (
     <Link to="/login" className={className}><LogIn size={17} aria-hidden="true" /> {label}</Link>
   ));
-
-  const year = new Date().getFullYear();
 
   return (
     <div className="site">
@@ -124,106 +150,124 @@ export default function LandingPage() {
       </header>
 
       <main id="yaliyomo">
-        {/* ---- Hero ------------------------------------------------------ */}
+        {/* ---- Hero: rotating campus photos under a dark overlay --------- */}
         <section id="mwanzo" className="hero" aria-label={t.nav.home}>
+          <HeroBackground lang={lang} />
+          <div className="hero__overlay" aria-hidden="true" />
           <div className="site-container hero__inner">
-            <div className="hero__copy">
-              <span className="hero__eyebrow"><ShieldCheck size={15} aria-hidden="true" /> {t.registered}</span>
-              <h1 className="hero__title">{school?.name || t.hero.eyebrow}</h1>
-              {school?.motto && <p className="hero__motto">“{school.motto}”</p>}
-              <p className="hero__intro">{t.hero.intro}</p>
-              <div className="hero__actions">
-                {portalLink('site-btn site-btn--accent site-btn--lg', t.hero.primary)}
-                <a href="#huduma" className="site-btn site-btn--ghost site-btn--lg">{t.hero.secondary} <ArrowRight size={17} aria-hidden="true" /></a>
-              </div>
-              <dl className="hero__highlights">
-                {t.hero.highlights.map((item) => (
-                  <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>
-                ))}
-              </dl>
+            <span className="hero__eyebrow"><ShieldCheck size={15} aria-hidden="true" /> {t.registered}</span>
+            <h1 className="hero__title">{school?.name || t.hero.eyebrow}</h1>
+            <p className="hero__subtitle">{t.hero.eyebrow}</p>
+            <p className="hero__intro">{t.hero.intro}</p>
+            <div className="hero__actions">
+              {portalLink('site-btn site-btn--accent site-btn--lg', t.hero.primary)}
+              <a href="#kuhusu" className="site-btn site-btn--ghost site-btn--lg">{t.hero.secondary} <ArrowRight size={17} aria-hidden="true" /></a>
             </div>
-            <div className="hero__media">
-              <HeroSlideshow slides={SLIDES} lang={lang} labels={{ ...t.slideshow, region: school?.name || t.nav.home, dots: t.slideshow.goTo }} />
-            </div>
+            <ul className="hero__highlights">
+              {t.hero.highlights.map((item) => <li key={item}><CheckCircle2 size={16} aria-hidden="true" /> {item}</li>)}
+            </ul>
           </div>
         </section>
 
-        {/* ---- Features -------------------------------------------------- */}
-        <section id="huduma" className="site-section">
-          <div className="site-container">
-            <SectionHead eyebrow={t.features.eyebrow} title={t.features.title} lead={t.features.lead} />
-            <div className="feature-grid">
-              {t.features.items.map((feature) => {
-                const Icon = FEATURE_ICONS[feature.key] ?? BookOpenCheck;
-                return (
-                  <article key={feature.key} className="feature-card">
-                    <span className="feature-card__icon" aria-hidden="true"><Icon size={22} /></span>
-                    <h3 className="feature-card__title">{feature.title}</h3>
-                    <p>{feature.text}</p>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ---- About ----------------------------------------------------- */}
-        <section id="kuhusu" className="site-section site-section--tinted">
-          <div className="site-container">
-            <SectionHead eyebrow={t.about.eyebrow} title={t.about.title} lead={t.about.lead} />
-            <div className="about-grid">
-              <article className="about-card about-card--accent">
-                <span className="about-card__icon" aria-hidden="true"><Telescope size={20} /></span>
-                <h3>{t.about.vision}</h3>
-                <p>{school?.vision || t.about.defaultVision}</p>
-              </article>
-              <article className="about-card">
-                <span className="about-card__icon" aria-hidden="true"><Target size={20} /></span>
-                <h3>{t.about.mission}</h3>
-                <p>{school?.mission || t.about.defaultMission}</p>
-              </article>
-              <article className="about-card">
-                <span className="about-card__icon" aria-hidden="true"><UsersRound size={20} /></span>
-                <h3>{t.about.values}</h3>
-                <ul>{t.about.valueList.map((value) => <li key={value.title}><strong>{value.title}</strong> — {value.text}</li>)}</ul>
-              </article>
-              <article className="about-card">
-                <span className="about-card__icon" aria-hidden="true"><ShieldCheck size={20} /></span>
-                <h3>{t.about.standards}</h3>
-                <ul>{t.about.standardList.map((item) => <li key={item}>{item}</li>)}</ul>
-              </article>
-            </div>
-
-            <div className="leadership">
-              <h3 className="leadership__heading">{t.leadership}</h3>
-              <div className="leadership__list">
-                {LEADERS.map((leader) => (
-                  <LeaderCard key={leader.id} leader={leader} name={leader.name ?? school?.headmasterName ?? leader.title[lang]} title={leader.title[lang]} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ---- Academics ------------------------------------------------- */}
-        <section id="masomo" className="site-section">
-          <div className="site-container">
-            <SectionHead eyebrow={t.academics.eyebrow} title={t.academics.title} lead={t.academics.lead} />
-            <div className="level-grid">
-              {t.academics.levels.map((level, index) => (
-                <article key={level.code} className="level-card">
-                  <span className="level-card__index mono">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="level-card__code mono">{level.code}</span>
-                  <h3 className="level-card__title">{level.title}</h3>
-                  <p>{level.text}</p>
+        {/* ---- School overview ------------------------------------------- */}
+        <section id="kuhusu" className="site-section">
+          <div className="site-container overview">
+            <figure className="overview__media">
+              <img src={IMAGES.overview} alt={t.overview.imageAlt} loading="lazy" />
+            </figure>
+            <div className="overview__copy">
+              <SectionHead eyebrow={t.overview.eyebrow} title={t.overview.title} lead={t.overview.lead} align="start" />
+              <div className="overview__cards">
+                <article className="info-tile">
+                  <span className="info-tile__icon" aria-hidden="true"><Telescope size={18} /></span>
+                  <div>
+                    <h3>{t.overview.vision}</h3>
+                    <p>{school?.vision || t.overview.defaultVision}</p>
+                  </div>
                 </article>
+                <article className="info-tile">
+                  <span className="info-tile__icon" aria-hidden="true"><Target size={18} /></span>
+                  <div>
+                    <h3>{t.overview.mission}</h3>
+                    <p>{school?.mission || t.overview.defaultMission}</p>
+                  </div>
+                </article>
+              </div>
+              <div className="overview__values">
+                <span>{t.overview.valuesLabel}:</span>
+                {t.overview.values.map((value) => <span key={value} className="tag">{value}</span>)}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ---- Academic streams ------------------------------------------ */}
+        <section id="michepuo" className="site-section site-section--tinted">
+          <div className="site-container">
+            <SectionHead eyebrow={t.streams.eyebrow} title={t.streams.title} lead={t.streams.lead} />
+            <h3 className="streams__label">{t.streams.oLevel}</h3>
+            <div className="stream-grid">
+              {t.streams.oStreams.map((stream) => (
+                <article key={stream.code} className="stream-card">
+                  <span className="stream-card__code mono">{stream.code}</span>
+                  <h4 className="stream-card__title">{stream.title}</h4>
+                  <p>{stream.subjects}</p>
+                </article>
+              ))}
+            </div>
+            <h3 className="streams__label">{t.streams.aLevel}</h3>
+            <div className="combo-grid">
+              {t.streams.combinations.map((combo) => (
+                <div key={combo.code} className="combo">
+                  <span className="combo__code mono">{combo.code}</span>
+                  <span className="combo__title">{combo.title}</span>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
+        {/* ---- Administrative structure ---------------------------------- */}
+        <section id="uongozi" className="site-section">
+          <div className="site-container">
+            <SectionHead eyebrow={t.administration.eyebrow} title={t.administration.title} lead={t.administration.lead} />
+            <div className="admin-banner" style={{ '--banner-image': `url("${IMAGES.administration}")` }}>
+              <p>{t.administration.banner}</p>
+            </div>
+            <div className="staff-grid">
+              {STAFF.map((member) => (
+                <StaffCard key={member.id} member={member} lang={lang} name={member.nameFrom ? school?.[member.nameFrom] : null} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ---- Parent portal --------------------------------------------- */}
+        <section id="wazazi" className="site-section site-section--tinted">
+          <div className="site-container parents">
+            <div className="parents__copy">
+              <SectionHead eyebrow={t.parents.eyebrow} title={t.parents.title} lead={t.parents.lead} align="start" />
+              <ul className="parents__list">
+                {t.parents.items.map((item) => {
+                  const Icon = PARENT_ICONS[item.key];
+                  return (
+                    <li key={item.key}>
+                      <span className="parents__icon" aria-hidden="true"><Icon size={18} /></span>
+                      <span><strong>{item.title}</strong><span>{item.text}</span></span>
+                    </li>
+                  );
+                })}
+              </ul>
+              {portalLink('site-btn site-btn--primary site-btn--lg', t.parents.action)}
+            </div>
+            <figure className="parents__media">
+              <img src={IMAGES.parents} alt={t.parents.imageAlt} loading="lazy" />
+            </figure>
+          </div>
+        </section>
+
         {/* ---- Announcements --------------------------------------------- */}
-        <section id="matangazo" className="site-section site-section--tinted">
+        <section id="matangazo" className="site-section">
           <div className="site-container">
             <SectionHead eyebrow={t.announcements.eyebrow} title={t.announcements.title} />
             {announcements.error && <p className="notice-empty">{t.announcements.error}</p>}
@@ -252,8 +296,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ---- Call to action -------------------------------------------- */}
-        <section className="cta">
+        {/* ---- Call to action (photo with dark overlay) ------------------- */}
+        <section className="cta" style={{ '--cta-image': `url("${IMAGES.cta}")` }}>
           <div className="site-container cta__inner">
             <div>
               <h2 className="cta__title">{t.cta.title}</h2>
@@ -287,7 +331,7 @@ export default function LandingPage() {
           <div>
             <h3 className="site-footer__heading">{t.footer.quickLinks}</h3>
             <ul className="site-footer__list">
-              {SECTIONS.slice(0, 4).map((section) => <li key={section.id}><a href={`#${section.id}`}>{t.nav[section.key]}</a></li>)}
+              {SECTIONS.map((section) => <li key={section.id}><a href={`#${section.id}`}>{t.nav[section.key]}</a></li>)}
             </ul>
           </div>
           <div>
@@ -297,7 +341,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="site-footer__bar">
-          <div className="site-container">© <span className="mono">{year}</span> {school?.name}. {t.footer.rights}</div>
+          <div className="site-container">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}. {t.footer.rights}</div>
         </div>
       </footer>
     </div>

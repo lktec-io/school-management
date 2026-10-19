@@ -9,6 +9,7 @@ import { useToast } from '../../../context/ToastContext.jsx';
 import { useApi } from '../../../hooks/useApi.js';
 import { useAsyncAction } from '../../../hooks/useAsyncAction.js';
 import { useForm } from '../../../hooks/useForm.js';
+import { useConfirm } from '../../../context/ConfirmContext.jsx';
 
 function FeeTypeModal({ feeType, onClose, onSaved }) {
   const toast = useToast();
@@ -51,6 +52,7 @@ function FeeTypeModal({ feeType, onClose, onSaved }) {
 }
 
 export default function FeeTypesPanel() {
+  const confirm = useConfirm();
   const { data, error, loading, reload } = useApi('/finance/fee-types', { includeInactive: true });
   const { run, pending } = useAsyncAction();
   const [modal, setModal] = useState(null);
@@ -83,7 +85,7 @@ export default function FeeTypesPanel() {
                       <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Delete ${type.name}`}
                         disabled={type.structures > 0 || pending === type.id}
                         title={type.structures > 0 ? 'In use — deactivate instead' : undefined}
-                        onClick={() => window.confirm(`Delete ${type.name}?`) && run(type.id, () => api.delete(`/finance/fee-types/${type.id}`), 'Fee type deleted.').then(reload)}>
+                        onClick={async () => (await confirm(`Delete ${type.name}?`)) && run(type.id, () => api.delete(`/finance/fee-types/${type.id}`), 'Fee type deleted.').then(reload)}>
                         <Trash2 size={15} />
                       </button>
                     </td>

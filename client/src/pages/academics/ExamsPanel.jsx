@@ -11,6 +11,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { EXAM_TYPE_LABELS, formatDate, formatNumber } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 /** Mirrors the server's exam lifecycle. */
 const TRANSITIONS = {
@@ -84,6 +85,7 @@ function ExamModal({ exam, years, defaultTermId, onClose, onSaved }) {
 }
 
 export default function ExamsPanel() {
+  const confirm = useConfirm();
   const { term } = useAcademicPeriod();
   const [termId, setTermId] = useState(term ? String(term.id) : '');
   const years = useApi('/academics/years');
@@ -92,8 +94,8 @@ export default function ExamsPanel() {
   const [modal, setModal] = useState(null);
   const yearList = years.data ?? [];
 
-  const changeStatus = (exam, transition) => {
-    if (transition.to === 'published' && !window.confirm(`Publish ${exam.name}? Parents will be able to view and download report cards.`)) return;
+  const changeStatus = async (exam, transition) => {
+    if (transition.to === 'published' && !(await confirm(`Publish ${exam.name}? Parents will be able to view and download report cards.`))) return;
     run(`${exam.id}-${transition.to}`, () => api.put(`/exams/${exam.id}`, { status: transition.to }), `${exam.name}: ${transition.label.toLowerCase()} — done.`)
       .then(reload);
   };
@@ -168,7 +170,7 @@ export default function ExamsPanel() {
                         className="btn btn--ghost btn--icon btn--sm"
                         aria-label={`Delete ${exam.name}`}
                         disabled={exam.marksCount > 0 || pending === `del-${exam.id}`}
-                        onClick={() => window.confirm(`Delete ${exam.name}?`)
+                        onClick={async () => (await confirm(`Delete ${exam.name}?`))
                           && run(`del-${exam.id}`, () => api.delete(`/exams/${exam.id}`), 'Examination deleted.').then(reload)}
                       >
                         <Trash2 size={15} />

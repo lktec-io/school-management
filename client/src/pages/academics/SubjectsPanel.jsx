@@ -10,6 +10,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { LEVEL_LABELS } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 function SubjectModal({ subject, defaultLevel, onClose, onSaved }) {
   const toast = useToast();
@@ -59,6 +60,7 @@ function SubjectModal({ subject, defaultLevel, onClose, onSaved }) {
 }
 
 export default function SubjectsPanel() {
+  const confirm = useConfirm();
   const [level, setLevel] = useState('');
   const { data: subjects, error, loading, reload } = useApi('/academics/subjects', { level, includeInactive: true });
   const { run, pending } = useAsyncAction();
@@ -108,7 +110,7 @@ export default function SubjectsPanel() {
                         className="btn btn--ghost btn--icon btn--sm"
                         aria-label={`Delete ${subject.name}`}
                         disabled={pending === subject.id}
-                        onClick={() => window.confirm(`Delete ${subject.name}? Subjects with marks or assignments cannot be deleted — deactivate them instead.`)
+                        onClick={async () => (await confirm(`Delete ${subject.name}? Subjects with marks or assignments cannot be deleted — deactivate them instead.`))
                           && run(subject.id, () => api.delete(`/academics/subjects/${subject.id}`), 'Subject deleted.').then(reload)}
                       >
                         <Trash2 size={15} />

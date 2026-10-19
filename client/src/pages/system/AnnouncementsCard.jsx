@@ -10,6 +10,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { formatDate, todayIso } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 const CATEGORIES = {
   general: 'General / Jumla',
@@ -69,6 +70,7 @@ function AnnouncementModal({ item, onClose, onSaved }) {
 
 /** Headmaster-managed notices for the public landing page ("Matangazo"). */
 export default function AnnouncementsCard() {
+  const confirm = useConfirm();
   const { data, error, reload } = useApi('/system/announcements');
   const { run, pending } = useAsyncAction();
   const [modal, setModal] = useState(null);
@@ -106,7 +108,7 @@ export default function AnnouncementsCard() {
                     <Pencil size={14} />
                   </button>
                   <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Delete ${item.title}`} disabled={pending === item.id}
-                    onClick={() => window.confirm(`Delete “${item.title}”?`) && run(item.id, () => api.delete(`/system/announcements/${item.id}`), 'Announcement deleted.').then(reload)}>
+                    onClick={async () => (await confirm(`Delete “${item.title}”?`)) && run(item.id, () => api.delete(`/system/announcements/${item.id}`), 'Announcement deleted.').then(reload)}>
                     <Trash2 size={14} />
                   </button>
                 </span>

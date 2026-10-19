@@ -85,6 +85,7 @@ const en = {
     confirmed: 'Confirmed', reversed: 'Reversed', recorded: 'Recorded', voided: 'Voided', revoked: 'Revoked',
     queued: 'Queued', sent: 'Sent', delivered: 'Delivered', failed: 'Failed',
   },
+  confirm: { title: 'Please confirm', ok: 'Yes, continue' },
   feedback: {
     errorTitle: 'Something went wrong',
     accessRestricted: 'Access restricted',

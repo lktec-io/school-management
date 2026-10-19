@@ -11,6 +11,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { formatDate } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 function YearModal({ year, onClose, onSaved }) {
   const toast = useToast();
@@ -89,6 +90,7 @@ function TermModal({ year, term, onClose, onSaved }) {
 }
 
 export default function CalendarPanel() {
+  const confirm = useConfirm();
   const academic = useAcademicPeriod();
   const { data: years, error, loading, reload } = useApi('/academics/years');
   const { run, pending } = useAsyncAction();
@@ -151,7 +153,7 @@ export default function CalendarPanel() {
                 className="btn btn--ghost btn--icon btn--sm"
                 aria-label={`Delete ${year.yearLabel}`}
                 disabled={year.isCurrent || pending === `del-year-${year.id}`}
-                onClick={() => window.confirm(`Delete academic year ${year.yearLabel}?`)
+                onClick={async () => (await confirm(`Delete academic year ${year.yearLabel}?`))
                   && run(`del-year-${year.id}`, () => api.delete(`/academics/years/${year.id}`), 'Academic year deleted.').then(afterChange)}
               >
                 <Trash2 size={15} />
@@ -196,7 +198,7 @@ export default function CalendarPanel() {
                         className="btn btn--ghost btn--icon btn--sm"
                         aria-label={`Delete ${term.termName}`}
                         disabled={term.isCurrent || pending === `del-term-${term.id}`}
-                        onClick={() => window.confirm(`Delete ${term.termName} (${year.yearLabel})?`)
+                        onClick={async () => (await confirm(`Delete ${term.termName} (${year.yearLabel})?`))
                           && run(`del-term-${term.id}`, () => api.delete(`/academics/terms/${term.id}`), 'Term deleted.').then(afterChange)}
                       >
                         <Trash2 size={15} />

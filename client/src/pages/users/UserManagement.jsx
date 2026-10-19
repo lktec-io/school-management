@@ -16,6 +16,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { ROLE_LABELS, formatDateTime, formatPhone } from '../../utils/format.js';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 function UserModal({ user, onClose, onSaved }) {
   const { user: me } = useAuth();
@@ -109,6 +110,7 @@ function TemporaryPasswordModal({ result, onClose }) {
 }
 
 export default function UserManagement() {
+  const confirm = useConfirm();
   const { t } = useTranslation();
   const { user: me } = useAuth();
   const toast = useToast();
@@ -125,8 +127,8 @@ export default function UserManagement() {
 
   const { data, error, loading, reload } = useApi('/users', { ...filters, pageSize: 25 });
 
-  const resetPassword = (user) => {
-    if (!window.confirm(`Reset the password for ${user.fullName}? They will be signed out everywhere.`)) return;
+  const resetPassword = async (user) => {
+    if (!(await confirm(`Reset the password for ${user.fullName}? They will be signed out everywhere.`))) return;
     run(`reset-${user.id}`, () => api.post(`/users/${user.id}/reset-password`)).then(({ ok, result }) => {
       if (ok) setModal({ type: 'password', result });
     });

@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { FEE_REMINDER_TEMPLATE } from '../../utils/sms.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 const AUDIENCES = [
   { id: 'all_parents', label: 'All parents', description: 'Guardians of every active student' },
@@ -27,6 +28,7 @@ const TEMPLATES = {
 };
 
 export default function BroadcastPanel({ onSent }) {
+  const confirm = useConfirm();
   const { hasRole } = useAuth();
   const toast = useToast();
   const { term } = useAcademicPeriod();
@@ -64,7 +66,7 @@ export default function BroadcastPanel({ onSent }) {
   };
 
   const send = async () => {
-    if (!window.confirm(`Send this SMS to ${preview.recipients} recipient(s) using about ${preview.totalSegments} credits?`)) return;
+    if (!(await confirm(`Send this SMS to ${preview.recipients} recipient(s) using about ${preview.totalSegments} credits?`))) return;
     setSending(true);
     setError(null);
     try {

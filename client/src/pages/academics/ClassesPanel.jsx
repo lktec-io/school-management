@@ -10,6 +10,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { LEVEL_LABELS } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 function ClassModal({ cls, teachers, onClose, onSaved }) {
   const toast = useToast();
@@ -66,6 +67,7 @@ function ClassModal({ cls, teachers, onClose, onSaved }) {
 }
 
 function StreamModal({ cls, stream, onClose, onSaved }) {
+  const confirm = useConfirm();
   const toast = useToast();
   const form = useForm({
     streamName: stream?.streamName ?? '',
@@ -111,7 +113,7 @@ function StreamModal({ cls, stream, onClose, onSaved }) {
             disabled={form.submitting || stream.activeStudents > 0}
             title={stream.activeStudents > 0 ? 'Move students out of this stream first' : undefined}
             onClick={async () => {
-              if (!window.confirm(`Delete stream ${stream.streamName}?`)) return;
+              if (!(await confirm(`Delete stream ${stream.streamName}?`))) return;
               try {
                 await api.delete(`/academics/streams/${stream.id}`);
                 toast.success(`Stream ${stream.streamName} deleted.`);
@@ -130,6 +132,7 @@ function StreamModal({ cls, stream, onClose, onSaved }) {
 }
 
 export default function ClassesPanel() {
+  const confirm = useConfirm();
   const { data: classes, error, loading, reload } = useApi('/academics/classes', { includeInactive: true });
   const teachers = useApi('/users', { role: 'teacher', status: 'active', pageSize: 200 });
   const { run, pending } = useAsyncAction();
@@ -203,7 +206,7 @@ export default function ClassesPanel() {
                         className="btn btn--ghost btn--icon btn--sm"
                         aria-label={`Delete ${cls.className}`}
                         disabled={pending === `class-${cls.id}`}
-                        onClick={() => window.confirm(`Delete ${cls.className}? Classes with students or history cannot be deleted — deactivate them instead.`)
+                        onClick={async () => (await confirm(`Delete ${cls.className}? Classes with students or history cannot be deleted — deactivate them instead.`))
                           && run(`class-${cls.id}`, () => api.delete(`/academics/classes/${cls.id}`), 'Class deleted.').then(reload)}
                       >
                         <Trash2 size={15} />

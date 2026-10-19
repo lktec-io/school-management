@@ -85,6 +85,7 @@ const sw = {
     confirmed: 'Imethibitishwa', reversed: 'Imerejeshwa', recorded: 'Imerekodiwa', voided: 'Imebatilishwa', revoked: 'Imefutwa',
     queued: 'Kwenye foleni', sent: 'Imetumwa', delivered: 'Imefika', failed: 'Imeshindwa',
   },
+  confirm: { title: 'Thibitisha', ok: 'Ndiyo, endelea' },
   feedback: {
     errorTitle: 'Hitilafu imetokea',
     accessRestricted: 'Ufikiaji umezuiliwa',

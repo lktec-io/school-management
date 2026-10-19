@@ -12,7 +12,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:migrate": "node src/scripts/migrate.js",
-    "create-admin": "node src/scripts/createAdmin.js"
+    "create-admin": "node src/scripts/createAdmin.js",
+    "sms:check": "node src/scripts/checkSms.js"
   },
   "dependencies": {
     "axios": "^1.9.0",

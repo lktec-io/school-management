@@ -10,6 +10,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { LEVEL_LABELS } from '../../utils/format.js';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 function AssignmentModal({ classes, teachers, academicYearId, onClose, onSaved }) {
   const toast = useToast();
@@ -95,6 +96,7 @@ function ReassignModal({ assignment, teachers, onClose, onSaved }) {
 }
 
 export default function AssignmentsPanel() {
+  const confirm = useConfirm();
   const { academicYear } = useAcademicPeriod();
   const [filters, setFilters] = useState({ classId: '', teacherId: '' });
   const classes = useApi('/academics/classes');
@@ -177,7 +179,7 @@ export default function AssignmentsPanel() {
                         className="btn btn--ghost btn--icon btn--sm"
                         aria-label={`Remove ${assignment.subjectName} assignment`}
                         disabled={pending === assignment.id}
-                        onClick={() => window.confirm(`Remove ${assignment.teacherName} from ${assignment.subjectName} (${assignment.className})?`)
+                        onClick={async () => (await confirm(`Remove ${assignment.teacherName} from ${assignment.subjectName} (${assignment.className})?`))
                           && run(assignment.id, () => api.delete(`/academics/assignments/${assignment.id}`), 'Assignment removed.').then(reload)}
                       >
                         <Trash2 size={15} />

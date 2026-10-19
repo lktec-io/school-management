@@ -1,14 +1,14 @@
 import { dateLocale } from '../i18n/index.js';
 import { formatNumber } from './format.js';
 
-/** Chart palette drawn from the portal theme (academic blue, amber, sky, slate, green, red). */
-export const CHART_COLORS = ['#1e3a8a', '#f59e0b', '#3b82f6', '#94a3b8', '#059669', '#dc2626', '#64748b'];
+/** Chart palette drawn from the portal theme (academic blue, emerald, sky, slate, crimson). */
+export const CHART_COLORS = ['#1e3a8a', '#10b981', '#3b82f6', '#94a3b8', '#dc2626', '#f59e0b', '#64748b'];
 export const SERIES = {
   primary: '#1e3a8a',
-  accent: '#f59e0b',
+  accent: '#10b981',
   sky: '#3b82f6',
   success: '#059669',
-  danger: '#dc2626',
+  danger: '#ef4444',
   muted: '#cbd5e1',
 };
 

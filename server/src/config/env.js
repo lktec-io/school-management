@@ -1,10 +1,47 @@
 import 'dotenv/config';
+import fs from 'node:fs';
 import path from 'node:path';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const errors = [];
+
+/*
+ * SMS credentials: server/.env is authoritative. dotenv never overrides variables that already
+ * exist, and PM2 keeps the environment a process was first started with (and copies the shell's
+ * environment on `pm2 reload --update-env`), so a stale BEEM_* value there would silently win over
+ * a corrected .env and Beem would answer "Invalid Authentication Parameters".
+ */
+const BEEM_FILE_KEYS = ['BEEM_API_KEY', 'BEEM_SECRET_KEY', 'BEEM_SENDER_ID'];
+const beemOverriddenFromFile = [];
+try {
+  const fileEnv = dotenv.parse(fs.readFileSync(path.join(serverRoot, '.env')));
+  for (const key of BEEM_FILE_KEYS) {
+    const fromFile = fileEnv[key];
+    if (fromFile === undefined || fromFile.trim() === '') continue;
+    if (process.env[key] !== undefined && process.env[key] !== fromFile) beemOverriddenFromFile.push(key);
+    process.env[key] = fromFile;
+  }
+} catch (error) {
+  if (error.code !== 'ENOENT') errors.push(`server/.env could not be read: ${error.message}`);
+}
+
+/**
+ * API keys never contain spaces: drop surrounding quotes, whitespace anywhere, and invisible
+ * characters (BOM, zero-width, non-breaking space) that sneak in when keys are copied from a browser.
+ */
+function readCredential(name) {
+  const raw = process.env[name];
+  if (raw === undefined) return undefined;
+  const cleaned = raw
+    .replace(/[\u200B-\u200D\u2060\uFEFF\u00A0]/g, '')
+    .trim()
+    .replace(/^(['"`])(.*)\1$/s, '$2')
+    .replace(/\s+/g, '');
+  return cleaned === '' ? undefined : cleaned;
+}
 
 function read(name, { required = false, fallback } = {}) {
   const raw = process.env[name];
@@ -131,9 +168,10 @@ const env = Object.freeze({
   }),
 
   beem: Object.freeze({
-    apiKey: read('BEEM_API_KEY'),
-    secretKey: read('BEEM_SECRET_KEY'),
-    senderId: read('BEEM_SENDER_ID'),
+    apiKey: readCredential('BEEM_API_KEY'),
+    secretKey: readCredential('BEEM_SECRET_KEY'),
+    senderId: read('BEEM_SENDER_ID')?.replace(/^(['"])(.*)\1$/, '$2'),
+    overriddenFromFile: Object.freeze(beemOverriddenFromFile),
     baseUrl: read('BEEM_BASE_URL', { fallback: 'https://apisms.beem.africa/v1/send' }),
     balanceUrl: read('BEEM_BALANCE_URL', { fallback: 'https://apisms.beem.africa/public/v1/vendors/balance' }),
     timeoutMs: readInt('BEEM_TIMEOUT_MS', 15000, { min: 1000, max: 120000 }),

@@ -12,6 +12,7 @@ import { useApi } from '../../../hooks/useApi.js';
 import { useAsyncAction } from '../../../hooks/useAsyncAction.js';
 import { useForm } from '../../../hooks/useForm.js';
 import { formatMoney } from '../../../utils/format.js';
+import { useConfirm } from '../../../context/ConfirmContext.jsx';
 
 function TermOptions({ years }) {
   return years.map((year) => (
@@ -186,6 +187,7 @@ function CopyModal({ years, defaultTo, onClose, onSaved }) {
 }
 
 export default function StructuresPanel() {
+  const confirm = useConfirm();
   const { term } = useAcademicPeriod();
   const [termId, setTermId] = useState(term ? String(term.id) : '');
   const [classId, setClassId] = useState('');
@@ -262,7 +264,7 @@ export default function StructuresPanel() {
                       <td className="actions">
                         <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label="Edit fee" onClick={() => setModal({ type: 'edit', structure: item })}><Pencil size={15} /></button>
                         <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label="Delete fee" disabled={pending === item.id}
-                          onClick={() => window.confirm(`Remove ${item.feeTypeName} from ${item.className}?`)
+                          onClick={async () => (await confirm(`Remove ${item.feeTypeName} from ${item.className}?`))
                             && run(item.id, () => api.delete(`/finance/fee-structures/${item.id}`), 'Fee removed.').then(reload)}>
                           <Trash2 size={15} />
                         </button>

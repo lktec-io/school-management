@@ -18,9 +18,11 @@ export function StatTile({ label, value, meta, icon: Icon, tone, mono = false, t
       {to && <ArrowUpRight size={14} className="stat-tile__go" aria-hidden="true" />}
     </>
   );
+  // Soft tinted card per tone: green = money in, red = expenses/arrears, blue = totals, amber = pending.
+  const className = `stat-tile stat-tile--${tone || 'info'}`;
   return to
-    ? <Link to={to} className="stat-tile stat-tile--link">{body}</Link>
-    : <div className="stat-tile">{body}</div>;
+    ? <Link to={to} className={`${className} stat-tile--link`}>{body}</Link>
+    : <div className={className}>{body}</div>;
 }
 
 /** Horizontal progress bar; tone defaults by value (≥75 good, ≥50 warning, else danger). */

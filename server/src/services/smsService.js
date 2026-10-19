@@ -22,14 +22,70 @@ const DISPATCH_CONCURRENCY = 4;
 const INSERT_CHUNK = 200;
 const NOT_CONFIGURED = 'SMS gateway not configured (BEEM_API_KEY, BEEM_SECRET_KEY and BEEM_SENDER_ID are required)';
 
-const http = axios.create({
-  timeout: env.beem.timeoutMs,
-  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-});
+const http = axios.create({ timeout: env.beem.timeoutMs });
 
+/** Beem expects HTTP Basic auth: base64("<api key>:<secret key>"), plus JSON content headers. */
 function authConfig() {
-  return { auth: { username: env.beem.apiKey, password: env.beem.secretKey } };
+  const token = Buffer.from(`${env.beem.apiKey}:${env.beem.secretKey}`).toString('base64');
+  return {
+    headers: {
+      Authorization: `Basic ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  };
 }
+
+function mask(value) {
+  if (!value) return '(missing)';
+  if (value.length <= 8) return `${'*'.repeat(value.length)} (${value.length} chars)`;
+  return `${value.slice(0, 4)}…${value.slice(-4)} (${value.length} chars)`;
+}
+
+/**
+ * Safe description of the loaded SMS configuration (keys masked) with likely causes of an
+ * authentication failure. Used in logs, at startup and by `npm run sms:check`.
+ */
+export function credentialDiagnostics() {
+  const { apiKey, secretKey, senderId, baseUrl, balanceUrl, overriddenFromFile } = env.beem;
+  const hints = [];
+  if (!apiKey || !secretKey) hints.push('BEEM_API_KEY and BEEM_SECRET_KEY must both be set in server/.env');
+  if (apiKey && secretKey && apiKey === secretKey) hints.push('BEEM_API_KEY and BEEM_SECRET_KEY are identical — the secret key is a different, longer value');
+  if (apiKey && secretKey && apiKey.length > secretKey.length) hints.push('BEEM_API_KEY is longer than BEEM_SECRET_KEY — the two values may be swapped');
+  if (senderId && senderId.length > 11) hints.push('BEEM_SENDER_ID is longer than 11 characters');
+  if (!senderId) hints.push('BEEM_SENDER_ID is not set');
+  if (overriddenFromFile.length) hints.push(`Stale values for ${overriddenFromFile.join(', ')} in the process environment were replaced by server/.env`);
+  hints.push('Copy both keys again from https://login.beem.africa → Profile → Authentication Information (SMS keys, not another product), then run: pm2 reload school-system-api --update-env');
+  return {
+    apiKey: mask(apiKey),
+    secretKey: mask(secretKey),
+    senderId: senderId || '(missing)',
+    sendUrl: baseUrl,
+    balanceUrl,
+    hints,
+  };
+}
+
+/** Beem answers bad credentials with HTTP 401/403 and/or code 120 "Invalid Authentication Parameters". */
+function isAuthFailure(status, data) {
+  return status === 401 || status === 403 || Number(data?.code) === 120 || /authenticat/i.test(String(data?.message ?? ''));
+}
+
+let lastAuthLog = 0;
+function logAuthFailure(context, status, data) {
+  // Several dispatch workers fail together; one detailed entry per minute is enough.
+  if (Date.now() - lastAuthLog < 60_000) return;
+  lastAuthLog = Date.now();
+  logger.error('Beem rejected the SMS credentials', {
+    context,
+    httpStatus: status ?? null,
+    beemCode: data?.code ?? null,
+    beemMessage: data?.message ?? null,
+    ...credentialDiagnostics(),
+  });
+}
+
+const AUTH_HELP = 'check BEEM_API_KEY / BEEM_SECRET_KEY in server/.env (details in the server log)';
 
 export function isSmsConfigured() {
   return Boolean(env.beem.apiKey && env.beem.secretKey && env.beem.senderId);
@@ -102,8 +158,12 @@ async function postToBeem(recipients, message) {
     recipients: recipients.map((row) => ({ recipient_id: row.id, dest_addr: row.recipient })),
   };
   try {
-    const { data } = await http.post(env.beem.baseUrl, payload, authConfig());
+    const { data, status } = await http.post(env.beem.baseUrl, payload, authConfig());
     const ok = data?.successful === true || Number(data?.code) === 100;
+    if (!ok && isAuthFailure(status, data)) {
+      logAuthFailure('send', status, data);
+      return { ok: false, data, requestId: null, error: `Gateway error: ${data?.message || 'Invalid Authentication Parameters'} — ${AUTH_HELP}` };
+    }
     return {
       ok,
       data,
@@ -111,9 +171,14 @@ async function postToBeem(recipients, message) {
       error: ok ? null : (data?.message || 'Message rejected by the SMS gateway'),
     };
   } catch (error) {
+    const status = error.response?.status;
     const data = error.response?.data ?? null;
     const reason = data?.message || data?.data?.message || error.message;
-    logger.warn('Beem SMS request failed', { status: error.response?.status, reason });
+    if (isAuthFailure(status, data)) {
+      logAuthFailure('send', status, data);
+      return { ok: false, data, requestId: null, error: `Gateway error: ${reason} — ${AUTH_HELP}` };
+    }
+    logger.warn('Beem SMS request failed', { status, code: data?.code, reason, url: env.beem.baseUrl });
     return { ok: false, data, requestId: null, error: `Gateway error: ${reason}` };
   }
 }
@@ -247,8 +312,14 @@ export async function getBeemBalance() {
     const raw = data?.data?.credit_balance ?? data?.credit_balance ?? data?.balance ?? null;
     return { configured: true, creditBalance: raw === null ? null : Number(raw), error: null };
   } catch (error) {
-    const reason = error.response?.data?.message || error.message;
-    logger.warn('Beem balance request failed', { status: error.response?.status, reason });
+    const status = error.response?.status;
+    const data = error.response?.data ?? null;
+    const reason = data?.message || data?.data?.message || error.message;
+    if (isAuthFailure(status, data)) {
+      logAuthFailure('balance', status, data);
+      return { configured: true, creditBalance: null, error: `Beem rejected the credentials: ${reason} — ${AUTH_HELP}` };
+    }
+    logger.warn('Beem balance request failed', { status, reason, url: env.beem.balanceUrl });
     return { configured: true, creditBalance: null, error: `Could not reach Beem: ${reason}` };
   }
 }

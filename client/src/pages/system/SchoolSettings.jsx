@@ -12,6 +12,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { useForm } from '../../hooks/useForm.js';
 import { refreshSchoolProfile } from '../../hooks/useSchoolProfile.js';
 import AnnouncementsCard from './AnnouncementsCard.jsx';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 
 const ASSETS = [
   { kind: 'logo', label: 'School logo / crest', hint: 'Shown on the portal, report cards and receipts' },
@@ -104,6 +105,7 @@ function ProfileForm({ profile, onSaved }) {
 }
 
 function AssetTile({ asset, status, version, onChanged }) {
+  const confirm = useConfirm();
   const toast = useToast();
   const inputRef = useRef(null);
   const { run, pending } = useAsyncAction();
@@ -147,7 +149,7 @@ function AssetTile({ asset, status, version, onChanged }) {
         </button>
         {status?.uploaded && (
           <button type="button" className="btn btn--ghost btn--sm text-danger" disabled={pending === 'delete'}
-            onClick={() => window.confirm(`Remove the ${asset.label.toLowerCase()}?`)
+            onClick={async () => (await confirm(`Remove the ${asset.label.toLowerCase()}?`))
               && run('delete', () => api.delete(`/system/branding/${asset.kind}`), `${asset.label} removed.`).then(({ ok }) => ok && onChanged())}>
             <Trash2 size={14} aria-hidden="true" /> Remove
           </button>
