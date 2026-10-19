@@ -64,6 +64,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     role: user.role,
     mustChangePassword: user.must_change_password === 1,
     tokenVersion: user.token_version,
+    remember: payload.rem !== 0,
   };
   next();
 });

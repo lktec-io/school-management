@@ -5,7 +5,7 @@ import { teacherClassIds } from '../academics/access.service.js';
 import { getCurrentPeriod } from '../academics/calendar.service.js';
 import { computeClassResults, findExam } from '../exams/exams.service.js';
 import { computeTermBalances } from '../finance/balances.service.js';
-import { studentPhotoUrl } from '../students/students.service.js';
+import { getPerformance, studentPhotoUrl } from '../students/students.service.js';
 
 async function latestExamWithMarks(statuses) {
   const row = await queryOne(
@@ -19,15 +19,45 @@ async function latestExamWithMarks(statuses) {
   return row ? findExam(row.id) : null;
 }
 
-/** Pass rate and mean average for an exam across the given classes (or every class with marks). */
+const DIVISION_ORDER = ['I', 'II', 'III', 'IV', '0', 'INC'];
+
+/** Count results by division (secondary) or overall grade (primary/nursery), split ME (male) / KE (female). */
+function addToBreakdown(breakdown, students) {
+  for (const student of students) {
+    if (student.averagePct === null || !student.overall?.value) continue;
+    const kind = student.overall.type === 'division' ? 'division' : 'grade';
+    const table = breakdown[kind];
+    const row = table.get(student.overall.value) ?? { label: student.overall.value, male: 0, female: 0, total: 0 };
+    if (student.gender === 'male') row.male += 1;
+    else if (student.gender === 'female') row.female += 1;
+    row.total += 1;
+    table.set(student.overall.value, row);
+  }
+}
+
+function finishBreakdown(table, order) {
+  const rows = [...table.values()];
+  rows.sort((a, b) => {
+    const ia = order ? order.indexOf(a.label) : -1;
+    const ib = order ? order.indexOf(b.label) : -1;
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return String(a.label).localeCompare(String(b.label));
+  });
+  const totals = rows.reduce((sum, row) => ({ male: sum.male + row.male, female: sum.female + row.female, total: sum.total + row.total }), { male: 0, female: 0, total: 0 });
+  return { rows, totals };
+}
+
+/** Pass rate, mean average and division/grade breakdown for an exam across the given classes (or every class with marks). */
 async function examPerformance(exam, restrictToClassIds = null) {
   const rows = await query('SELECT DISTINCT class_id AS classId FROM marks WHERE exam_id = ?', [exam.id]);
   const classIds = rows.map((row) => row.classId).filter((id) => !restrictToClassIds || restrictToClassIds.includes(id));
 
   const byClass = [];
+  const breakdown = { division: new Map(), grade: new Map() };
   for (const classId of classIds) {
     const results = await computeClassResults(exam, classId);
     if (results.statistics.ranked === 0) continue;
+    addToBreakdown(breakdown, results.students);
     byClass.push({
       classId,
       className: results.class.className,
@@ -48,7 +78,34 @@ async function examPerformance(exam, restrictToClassIds = null) {
     passRate: candidates ? round((passed / candidates) * 100, 1) : null,
     meanAverage: candidates ? round(weightedMean / candidates, 2) : null,
     byClass,
+    divisions: finishBreakdown(breakdown.division, DIVISION_ORDER),
+    grades: finishBreakdown(breakdown.grade, null),
   };
+}
+
+/** Mean average and pass rate for the most recent exams with marks, oldest first ("Mwenendo wa Matokeo"). */
+async function performanceTrend(restrictToClassIds = null, limit = 6) {
+  const exams = await query(
+    `SELECT e.id FROM exams e
+      WHERE e.status IN ('open', 'closed', 'published') AND EXISTS (SELECT 1 FROM marks m WHERE m.exam_id = e.id)
+      ORDER BY COALESCE(e.end_date, e.start_date, DATE(e.created_at)) DESC, e.id DESC
+      LIMIT ${Number(limit)}`,
+  );
+  const points = [];
+  for (const { id } of exams.reverse()) {
+    const performance = await examPerformance(await findExam(id), restrictToClassIds);
+    if (!performance.candidates) continue;
+    points.push({
+      examId: id,
+      label: performance.exam.name,
+      termName: performance.exam.termName,
+      yearLabel: performance.exam.yearLabel,
+      meanAverage: performance.meanAverage,
+      passRate: performance.passRate,
+      candidates: performance.candidates,
+    });
+  }
+  return points;
 }
 
 async function feeSnapshot(term) {
@@ -147,7 +204,7 @@ async function paymentModes(term) {
 }
 
 async function adminSummary(period) {
-  const [counts, byClass, statusRows, latestExam, fees, finance, staffRows, monthly, modes] = await Promise.all([
+  const [counts, byClass, statusRows, latestExam, fees, finance, staffRows, monthly, modes, trend] = await Promise.all([
     queryOne(
       `SELECT
          (SELECT COUNT(*) FROM students WHERE status = 'active') AS activeStudents,
@@ -176,9 +233,11 @@ async function adminSummary(period) {
     query("SELECT role, COUNT(*) AS total FROM users WHERE status = 'active' GROUP BY role"),
     monthlySeries(6),
     paymentModes(period.term),
+    performanceTrend(),
   ]);
   return {
     metrics: counts,
+    trend,
     studentsByClass: byClass.map((row) => ({ ...row, male: Number(row.male ?? 0), female: Number(row.female ?? 0) })),
     staffByRole: Object.fromEntries(staffRows.map((row) => [row.role, row.total])),
     monthly,
@@ -260,7 +319,9 @@ async function teacherSummary(user, period) {
     return { ...entry, students: total, isClassTeacher: classTeacherOf.some((c) => c.classId === entry.classId) };
   }));
 
+  const trend = classIds.length ? await performanceTrend(classIds) : [];
   return {
+    trend,
     metrics: {
       subjectAssignments: assignments.length,
       classesTaught: classIds.length,
@@ -372,6 +433,12 @@ async function parentSummary(user, period) {
     paymentsByStudent.set(row.studentId, list);
   }
 
+  // Each child's average across exams (published only), oldest first, for the parent's trend chart.
+  const histories = await Promise.all(children.map((child) => getPerformance(child.id, user)));
+  const trendByStudent = new Map(children.map((child, index) => [child.id, histories[index].slice(0, 6).reverse().map((row) => ({
+    examId: row.examId, label: row.examName, termName: row.termName, yearLabel: row.yearLabel, averagePct: row.averagePct, grade: row.grade,
+  }))]));
+
   const mapped = children.map(({ photoPath, ...child }) => {
     const balance = balanceByStudent.get(child.id);
     const reports = reportsByStudent.get(child.id) ?? [];
@@ -379,6 +446,7 @@ async function parentSummary(user, period) {
       ...child,
       fullName: [child.firstName, child.middleName, child.lastName].filter(Boolean).join(' '),
       photoUrl: studentPhotoUrl(child.id, photoPath),
+      trend: trendByStudent.get(child.id) ?? [],
       latestReport: reports[0] ?? null,
       reports,
       payments: paymentsByStudent.get(child.id) ?? [],

@@ -1,13 +1,16 @@
-import { CircleCheck, Download, FileText, GraduationCap, Receipt, Wallet } from 'lucide-react';
+import { Award, Download, FileText, GraduationCap, Receipt, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { api, saveBlob } from '../../api/client.js';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { downloadReceipt } from '../../utils/finance.js';
-import { classLabel, formatDate, formatMoney } from '../../utils/format.js';
+import { SERIES } from '../../utils/charts.js';
+import { classLabel, formatDate, formatMoney, formatPercent } from '../../utils/format.js';
 import { EmptyState } from '../ui/Feedback.jsx';
 import { StatusBadge } from '../ui/StatusBadge.jsx';
 import StudentAvatar from '../ui/StudentAvatar.jsx';
+import { TrendChart } from './charts.jsx';
+import { StatTile } from './widgets.jsx';
 
 /** Parent portal: mobile-first cards with balance banner, report cards and receipts per child. */
 export default function ParentDashboard({ data }) {
@@ -25,15 +28,17 @@ export default function ParentDashboard({ data }) {
   });
 
   const owing = metrics.totalBalance > 0;
+  const latest = children.map((child) => child.trend?.at(-1)?.averagePct).filter((value) => value !== null && value !== undefined);
+  const latestAverage = latest.length ? latest.reduce((sum, value) => sum + value, 0) / latest.length : null;
   return (
     <div className="stack-lg">
-      <div className={`balance-banner${owing ? '' : ' balance-banner--clear'}`} role="status">
-        <div>
-          <div className="balance-banner__eyebrow">{owing ? t('dash.outstandingFees') : t('dash.schoolFees')}</div>
-          <div className="balance-banner__amount">{owing ? `TZS ${formatMoney(metrics.totalBalance)}` : t('dash.fullyPaid')}</div>
-          <div className="text-sm">{owing ? t('dash.owingHint') : t('dash.paidHint')}</div>
-        </div>
-        {owing ? <Wallet size={36} aria-hidden="true" /> : <CircleCheck size={36} aria-hidden="true" />}
+      <div className="kpi-grid kpi-grid--three">
+        <StatTile label={t('dash.latestAverage')} value={latestAverage !== null ? formatPercent(latestAverage) : '—'} icon={Award} mono tone="success"
+          to="/reports" meta={latest.length ? t('dash.publishedOnly') : t('dash.noReports')} />
+        <StatTile label={t('dash.children')} value={children.length} icon={GraduationCap} mono tone="info" to="/students"
+          meta={children.map((child) => child.firstName).join(', ')} />
+        <StatTile label={owing ? t('dash.outstandingFees') : t('dash.schoolFees')} value={owing ? formatMoney(metrics.totalBalance) : t('dash.fullyPaid')}
+          icon={Wallet} mono={owing} tone="warning" meta={owing ? t('dash.owingHint') : t('dash.paidHint')} />
       </div>
 
       <div className="child-grid">
@@ -49,6 +54,19 @@ export default function ParentDashboard({ data }) {
                   <div><StatusBadge status={child.status} /></div>
                 </div>
               </div>
+
+              {child.trend?.length > 0 && (
+                <div className="child-portal__trend">
+                  <div className="eyebrow">{t('dash.trendTitle')}</div>
+                  <TrendChart
+                    data={child.trend}
+                    xKey="label"
+                    percent
+                    height={170}
+                    lines={[{ key: 'averagePct', name: t('dash.averageScore'), color: SERIES.primary }]}
+                  />
+                </div>
+              )}
 
               {child.fees && (
                 <div className="child-portal__balance">

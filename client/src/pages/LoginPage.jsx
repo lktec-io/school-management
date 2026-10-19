@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquareText, Receipt, ShieldCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -11,9 +11,13 @@ import { useSchoolProfile } from '../hooks/useSchoolProfile.js';
 import '../styles/gov.css';
 import '../styles/login.css';
 
-const ROLES = ['admin', 'accountant', 'teacher', 'parent'];
+const FEATURES = [
+  { key: 'results', icon: FileText },
+  { key: 'fees', icon: Receipt },
+  { key: 'sms', icon: MessageSquareText },
+];
 
-/** Sign-in page: full-screen campus photo under a dark overlay with a centred, translucent card. */
+/** Split sign-in page: school photo with tint on the left, compact form on the right (stacked on phones). */
 export default function LoginPage() {
   const { t } = useTranslation();
   const { status } = useAuth();
@@ -34,37 +38,46 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page" style={{ '--login-image': `url("${IMAGES.login}")` }}>
-      <div className="login-page__overlay" aria-hidden="true" />
-
-      <header className="login-topbar">
-        <Link to="/" className="login-topbar__back"><ArrowLeft size={16} aria-hidden="true" /> {t('login.backToSite')}</Link>
-        <LanguageSwitch className="login-topbar__lang" />
-      </header>
-
-      <main className="login-main">
-        <div className="login-card">
-          <Link to="/" className="login-card__brand">
-            <Crest name={school?.name || ''} size={56} inverted logoSrc={school?.logoSrc} />
-            <span className="login-card__school">{school?.name || t('topbar.portal')}</span>
-            {school?.motto && <span className="login-card__motto">“{school.motto}”</span>}
+    <div className="login-page">
+      <aside className="login-visual" style={{ '--login-image': `url("${IMAGES.login}")` }}>
+        <div className="login-visual__inner">
+          <Link to="/" className="login-brand">
+            <Crest name={school?.name || ''} size={52} inverted logoSrc={school?.logoSrc} />
+            <span>
+              <span className="login-brand__name">{school?.name || t('topbar.portal')}</span>
+              {school?.motto && <span className="login-brand__motto">“{school.motto}”</span>}
+            </span>
           </Link>
+          <div className="login-visual__copy">
+            <span className="login-visual__eyebrow">{t('login.heroEyebrow')}</span>
+            <h2 className="login-visual__title">{t('login.heroTitle')}</h2>
+            <ul className="login-visual__features">
+              {FEATURES.map(({ key, icon: Icon }) => (
+                <li key={key}>
+                  <span className="login-visual__icon" aria-hidden="true"><Icon size={16} /></span>
+                  <span><strong>{t(`login.features.${key}.title`)}</strong> — {t(`login.features.${key}.text`)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {school?.registrationNo && <p className="login-visual__reg">{t('login.regLabel')} <span className="mono">{school.registrationNo}</span></p>}
+        </div>
+      </aside>
 
-          <div className="login-card__divider" />
-
+      <main className="login-panel">
+        <div className="login-panel__top">
+          <Link to="/" className="login-panel__back"><ArrowLeft size={16} aria-hidden="true" /> {t('login.backToSite')}</Link>
+          <LanguageSwitch />
+        </div>
+        <div className="login-card">
+          <div className="login-card__crest"><Crest name={school?.name || ''} size={44} logoSrc={school?.logoSrc} /></div>
           <h1 className="login-card__title">{t('login.title')}</h1>
           <p className="login-card__subtitle">{t('login.subtitle')}</p>
-          <ul className="login-roles" aria-label={t('login.rolesLabel')}>
-            {ROLES.map((role) => <li key={role}>{t(`roles.${role}`)}</li>)}
-          </ul>
-
           <LoginForm onSuccess={handleSignedIn} />
-
           <p className="login-card__legal"><ShieldCheck size={14} aria-hidden="true" /> {t('login.legal')}</p>
         </div>
+        <p className="login-panel__copyright">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}</p>
       </main>
-
-      <footer className="login-footer">© <span className="mono">{new Date().getFullYear()}</span> {school?.name}</footer>
     </div>
   );
 }

@@ -16,7 +16,7 @@ function sessionResponse(user, token) {
 export const login = asyncHandler(async (req, res) => {
   const credentials = validateLogin(req.body);
   const { user, token } = await authService.login(credentials, auditContext(req));
-  setSessionCookie(res, token);
+  setSessionCookie(res, token, { persistent: credentials.remember });
   res.status(200).json(sessionResponse(user, token));
 });
 
@@ -27,8 +27,8 @@ export const me = asyncHandler(async (req, res) => {
 
 export const changePassword = asyncHandler(async (req, res) => {
   const payload = validateChangePassword(req.body);
-  const { user, token } = await authService.changePassword(req.user.id, payload, auditContext(req));
-  setSessionCookie(res, token);
+  const { user, token } = await authService.changePassword(req.user.id, payload, auditContext(req), { remember: req.user.remember });
+  setSessionCookie(res, token, { persistent: req.user.remember });
   res.status(200).json({ ...sessionResponse(user, token), message: 'Password changed successfully' });
 });
 

@@ -3,9 +3,10 @@ import env from '../config/env.js';
 
 const ALGORITHM = 'HS256';
 
-export function signAccessToken(user) {
+/** `remember` (rem claim) decides whether the session cookie outlives the browser window. */
+export function signAccessToken(user, { remember = true } = {}) {
   return jwt.sign(
-    { role: user.role, tv: user.token_version },
+    { role: user.role, tv: user.token_version, rem: remember ? 1 : 0 },
     env.auth.jwtSecret,
     {
       algorithm: ALGORITHM,
@@ -37,8 +38,13 @@ export function sessionCookieOptions() {
   };
 }
 
-export function setSessionCookie(res, token) {
-  res.cookie(env.cookie.name, token, sessionCookieOptions());
+/**
+ * persistent = "Remember me": the cookie lives as long as the token. Otherwise it is a browser-session
+ * cookie (no maxAge) that disappears when the browser closes — safer on shared school computers.
+ */
+export function setSessionCookie(res, token, { persistent = true } = {}) {
+  const { maxAge, ...options } = sessionCookieOptions();
+  res.cookie(env.cookie.name, token, persistent ? { ...options, maxAge } : options);
 }
 
 export function clearSessionCookie(res) {

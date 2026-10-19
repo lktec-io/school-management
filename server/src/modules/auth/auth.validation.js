@@ -43,7 +43,8 @@ export function validateLogin(body = {}) {
   }
 
   if (Object.keys(errors).length > 0) throw ApiError.badRequest('Please correct the highlighted fields', errors);
-  return { identifier, password };
+  // Missing flag = remembered (older clients); the login form sends an explicit true/false.
+  return { identifier, password, remember: body.remember !== false };
 }
 
 export function validatePasswordStrength(password) {

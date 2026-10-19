@@ -88,3 +88,55 @@ export function PerformanceCard({ performance, title }) {
     </section>
   );
 }
+
+/**
+ * Results summary by division (secondary, NECTA style) or overall grade (primary/nursery),
+ * split ME (male) / KE (female) — as on official results sheets.
+ */
+export function BreakdownTable({ performance }) {
+  const { t } = useTranslation();
+  const divisions = performance?.divisions;
+  const grades = performance?.grades;
+  const useDivisions = divisions?.totals.total > 0;
+  const table = useDivisions ? divisions : grades;
+  if (!table || table.totals.total === 0) {
+    return <p className="chart-empty">{t('dash.noResultsHint')}</p>;
+  }
+  const label = (value) => (useDivisions ? (value === 'INC' ? t('dash.breakdown.incomplete') : `DIV ${value}`) : `${t('dash.breakdown.grade')} ${value}`);
+  const pct = (count) => `${formatNumber((count / table.totals.total) * 100, 1)}%`;
+  return (
+    <div className="table-wrapper">
+      <table className="data-table breakdown-table">
+        <thead>
+          <tr>
+            <th>{useDivisions ? t('dash.breakdown.division') : t('dash.breakdown.grade')}</th>
+            <th className="numeric">{t('dash.breakdown.me')}</th>
+            <th className="numeric">{t('dash.breakdown.ke')}</th>
+            <th className="numeric">{t('dash.breakdown.total')}</th>
+            <th className="numeric">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row) => (
+            <tr key={row.label}>
+              <td><span className={`breakdown-label breakdown-label--${String(row.label).toLowerCase()}`}>{label(row.label)}</span></td>
+              <td className="numeric mono">{row.male}</td>
+              <td className="numeric mono">{row.female}</td>
+              <td className="numeric mono"><strong>{row.total}</strong></td>
+              <td className="numeric mono text-muted">{pct(row.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>{t('dash.breakdown.total')}</td>
+            <td className="numeric mono">{table.totals.male}</td>
+            <td className="numeric mono">{table.totals.female}</td>
+            <td className="numeric mono">{table.totals.total}</td>
+            <td className="numeric mono">100%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}

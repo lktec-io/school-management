@@ -1,15 +1,15 @@
 import { dateLocale } from '../i18n/index.js';
 import { formatNumber } from './format.js';
 
-/** Chart palette drawn from the portal theme (academic blue, emerald, sky, slate, crimson). */
-export const CHART_COLORS = ['#1e3a8a', '#10b981', '#3b82f6', '#94a3b8', '#dc2626', '#f59e0b', '#64748b'];
+/** Chart palette: primary blue, success green, gold, info, danger, greys. */
+export const CHART_COLORS = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#dc3545', '#6c757d', '#343a40'];
 export const SERIES = {
-  primary: '#1e3a8a',
-  accent: '#10b981',
-  sky: '#3b82f6',
-  success: '#059669',
-  danger: '#ef4444',
-  muted: '#cbd5e1',
+  primary: '#007bff',
+  accent: '#ffc107',
+  sky: '#17a2b8',
+  success: '#28a745',
+  danger: '#dc3545',
+  muted: '#ced4da',
 };
 
 /** Compact axis labels: 1,250,000 → 1.3M. */

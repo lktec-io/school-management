@@ -271,7 +271,8 @@ export async function updateStudent(id, data, context) {
   return findStudent(id);
 }
 
-async function getPerformance(studentId, user) {
+/** Per-exam results history of one student (parents only see published exams). */
+export async function getPerformance(studentId, user) {
   const statusFilter = user.role === 'parent'
     ? "AND e.status = 'published'"
     : user.role === 'admin' ? '' : "AND e.status <> 'draft'";

@@ -1,11 +1,11 @@
-import { BookOpen, ClipboardCheck, GraduationCap, Layers, NotebookPen, Sheet, Users } from 'lucide-react';
+import { Award, ClipboardCheck, GraduationCap, Layers, NotebookPen, Percent, Sheet, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { SERIES } from '../../utils/charts.js';
-import { classLabel } from '../../utils/format.js';
+import { classLabel, formatPercent } from '../../utils/format.js';
 import { EmptyState } from '../ui/Feedback.jsx';
-import { BarChartCard, ChartCard, DonutChart } from './charts.jsx';
-import { Progress, StatTile } from './widgets.jsx';
+import { ChartCard, TrendChart } from './charts.jsx';
+import { BreakdownTable, Progress, StatTile } from './widgets.jsx';
 
 function marksLink(params) {
   const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== null && value !== undefined && value !== ''));
@@ -16,42 +16,38 @@ function marksLink(params) {
 export default function TeacherDashboard({ data }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { metrics, assignedClasses = [], pendingMarks = [], openExams = [], performance } = data;
+  const { metrics, assignedClasses = [], pendingMarks = [], openExams = [], performance, trend = [] } = data;
   const latestOpenExam = openExams[0];
 
-  const totalExpected = pendingMarks.reduce((sum, row) => sum + row.expected, 0);
-  const totalEntered = pendingMarks.reduce((sum, row) => sum + row.entered, 0);
-  const marksData = [
-    { key: 'entered', name: t('dash.marksEntered'), value: totalEntered, color: SERIES.success },
-    { key: 'pending', name: t('dash.marksPending'), value: Math.max(0, totalExpected - totalEntered), color: SERIES.accent },
-  ];
+  const hasValue = (value) => value !== null && value !== undefined;
 
   return (
     <>
-      <div className="kpi-grid">
-        <StatTile label={t('dash.classesTaught')} value={metrics.classesTaught} icon={Layers} mono />
-        <StatTile label={t('dash.students')} value={metrics.studentsTaught} icon={GraduationCap} mono to="/students" />
-        <StatTile label={t('dash.subjectAssignments')} value={metrics.subjectAssignments} icon={BookOpen} mono />
-        <StatTile label={t('dash.marksPending')} value={metrics.pendingMarks} icon={ClipboardCheck} mono to="/marks"
-          tone={metrics.pendingMarks ? 'warning' : 'success'}
-          meta={openExams.length ? t('dash.examsOpen', { count: openExams.length }) : t('dash.noExamsOpen')} />
+      <div className="kpi-grid kpi-grid--three">
+        <StatTile label={t('dash.passRate')} value={hasValue(performance?.passRate) ? formatPercent(performance.passRate) : '—'} icon={Award} mono tone="success"
+          meta={performance ? performance.exam.name : t('dash.noResults')} />
+        <StatTile label={t('dash.totalStudents')} value={metrics.studentsTaught} icon={GraduationCap} mono tone="info" to="/students"
+          meta={t('dash.classesCount', { count: metrics.classesTaught })} />
+        <StatTile label={t('dash.averageScore')} value={hasValue(performance?.meanAverage) ? formatPercent(performance.meanAverage) : '—'} icon={Percent} mono tone="warning"
+          to="/marks" meta={metrics.pendingMarks ? t('dash.pendingCount', { count: metrics.pendingMarks }) : t('dash.allCaughtUp')} />
       </div>
 
       <div className="chart-grid">
-        <ChartCard className="chart-card--wide" title={t('dash.myResults')}
-          caption={performance ? `${performance.exam.name} · ${t('charts.clickBar')}` : null}>
-          <BarChartCard
-            data={performance?.byClass ?? []}
-            xKey="className"
-            bars={[
-              { key: 'passRate', name: t('dash.passRate'), color: SERIES.primary },
-              { key: 'meanAverage', name: t('dash.meanPercent'), color: SERIES.accent },
+        <ChartCard className="chart-card--wide" title={t('dash.trendTitle')} caption={t('dash.myClasses')}>
+          <TrendChart
+            data={trend}
+            xKey="label"
+            percent
+            emptyText={t('dash.noResultsHint')}
+            lines={[
+              { key: 'meanAverage', name: t('dash.averageScore'), color: SERIES.primary },
+              { key: 'passRate', name: t('dash.passRate'), color: SERIES.success },
             ]}
-            onSelect={(row) => navigate(marksLink({ examId: performance.exam.id, classId: row.classId, view: 'results' }))}
+            onSelect={(row) => navigate(marksLink({ examId: row.examId, view: 'results' }))}
           />
         </ChartCard>
-        <ChartCard title={t('dash.marksProgress')} caption={openExams.length ? openExams[0].name : t('dash.noExamsOpen')}>
-          <DonutChart data={marksData} centerLabel={t('dash.marks')} onSelect={() => navigate('/marks')} />
+        <ChartCard title={t('dash.breakdownTitle')} caption={performance ? performance.exam.name : null}>
+          <BreakdownTable performance={performance} />
         </ChartCard>
       </div>
 

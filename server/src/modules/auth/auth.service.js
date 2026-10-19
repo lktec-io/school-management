@@ -30,7 +30,7 @@ export function toPublicUser(user) {
   };
 }
 
-export async function login({ identifier, password }, context) {
+export async function login({ identifier, password, remember = true }, context) {
   const column = identifier.type === 'email' ? 'email' : 'phone';
   const user = await queryOne(`SELECT ${USER_AUTH_COLUMNS} FROM users WHERE ${column} = ?`, [identifier.value]);
 
@@ -106,7 +106,7 @@ export async function login({ identifier, password }, context) {
     );
   });
 
-  const token = signAccessToken(user);
+  const token = signAccessToken(user, { remember });
   return { user: toPublicUser(user), token };
 }
 
@@ -120,7 +120,7 @@ export async function getProfile(userId) {
   return toPublicUser(user);
 }
 
-export async function changePassword(userId, { currentPassword, newPassword }, context) {
+export async function changePassword(userId, { currentPassword, newPassword }, context, { remember = true } = {}) {
   const user = await queryOne(`SELECT ${USER_AUTH_COLUMNS} FROM users WHERE id = ?`, [userId]);
   if (!user) throw ApiError.notFound('User not found');
 
@@ -157,7 +157,7 @@ export async function changePassword(userId, { currentPassword, newPassword }, c
     return queryOne(`SELECT ${USER_AUTH_COLUMNS} FROM users WHERE id = ?`, [user.id], connection);
   });
 
-  return { user: toPublicUser(updatedUser), token: signAccessToken(updatedUser) };
+  return { user: toPublicUser(updatedUser), token: signAccessToken(updatedUser, { remember }) };
 }
 
 /** Replace the signed-in user's profile picture (multipart file or data URL), stored in STORAGE_DIR/profiles. */
