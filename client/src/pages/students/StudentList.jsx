@@ -1,7 +1,8 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, FilterX, GraduationCap, Pencil, Search, UserPlus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, FileSpreadsheet, FilterX, GraduationCap, Pencil, Search, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import ImportStudentsModal from '../../components/students/ImportStudentsModal.jsx';
 import { EmptyState, ErrorBlock, LoadingBlock } from '../../components/ui/Feedback.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
@@ -45,6 +46,7 @@ export default function StudentList() {
     page: Number(params.get('page')) || 1,
   };
   const [searchInput, setSearchInput] = useState(filters.search);
+  const [importing, setImporting] = useState(false);
 
   const updateParams = (changes, { resetPage = true } = {}) => {
     const next = new URLSearchParams(params);
@@ -102,11 +104,17 @@ export default function StudentList() {
         title={isStaff ? t('nav.items.students') : t('nav.items.children')}
         subtitle={isStaff ? t('students.listSubtitle') : t('students.parentSubtitle')}
         actions={isAdmin && (
-          <Link to="/students/register" className="btn btn--primary">
-            <UserPlus size={16} aria-hidden="true" /> {t('students.register')}
-          </Link>
+          <>
+            <button type="button" className="btn btn--outline" onClick={() => setImporting(true)}>
+              <FileSpreadsheet size={16} aria-hidden="true" /> {t('students.import.button')}
+            </button>
+            <Link to="/students/register" className="btn btn--primary">
+              <UserPlus size={16} aria-hidden="true" /> {t('students.register')}
+            </Link>
+          </>
         )}
       />
+      {importing && <ImportStudentsModal onClose={() => setImporting(false)} onImported={reload} />}
 
       {isStaff && (
         <section className="card filter-panel">

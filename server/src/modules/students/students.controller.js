@@ -3,37 +3,10 @@ import { auditContext } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { optionalId, parseId, validator } from '../../utils/validator.js';
+import * as importService from './import.service.js';
 import * as photoService from './photo.service.js';
 import * as studentsService from './students.service.js';
-
-const NAME_PATTERN = /^[\p{L}][\p{L}' .-]*$/u;
-const NAME_MESSAGE = 'Use letters, spaces, apostrophes or hyphens only';
-
-function validateStudent(body, { partial = false } = {}) {
-  const today = todayInSchoolTz();
-  const v = validator(body, { partial })
-    .string('firstName', { required: true, max: 60, pattern: NAME_PATTERN, patternMessage: NAME_MESSAGE })
-    .string('middleName', { max: 60, pattern: NAME_PATTERN, patternMessage: NAME_MESSAGE })
-    .string('lastName', { required: true, max: 60, pattern: NAME_PATTERN, patternMessage: NAME_MESSAGE })
-    .oneOf('gender', ['male', 'female'], { required: true })
-    .date('dob', { required: true, notAfter: today, notBefore: '1950-01-01' })
-    .id('classId', { required: true })
-    .id('streamId')
-    .string('parentName', { required: true, min: 3, max: 150 })
-    .phone('parentPhone', { required: true })
-    .id('parentUserId')
-    .string('address', { max: 255 })
-    .date('admissionDate', { notAfter: today, notBefore: '1990-01-01' });
-
-  if (partial) {
-    v.oneOf('status', studentsService.STUDENT_STATUSES).string('statusReason', { max: 255 });
-  }
-  return v
-    .rule('dob', (data) => (data.dob && data.admissionDate && data.dob >= data.admissionDate
-      ? 'Date of birth must be before the admission date'
-      : null))
-    .result();
-}
+import { validateStudent } from './students.validation.js';
 
 export const listStudents = asyncHandler(async (req, res) => {
   const { status, gender, search, sort, dir } = req.query;
@@ -55,6 +28,34 @@ export const listStudents = asyncHandler(async (req, res) => {
 export const registerStudent = asyncHandler(async (req, res) => {
   const student = await studentsService.registerStudent(validateStudent(req.body), auditContext(req));
   res.status(201).json({ success: true, data: student, message: `Student registered as ${student.registrationNumber}` });
+});
+
+export const nextRegistrationNumber = asyncHandler(async (req, res) => {
+  const { admissionDate } = validator(req.query).date('admissionDate', { notBefore: '1990-01-01', notAfter: todayInSchoolTz() }).result();
+  res.json({ success: true, data: await studentsService.previewRegistrationNumber(admissionDate) });
+});
+
+export const importTemplate = asyncHandler(async (req, res) => {
+  const { filename, content } = await importService.importTemplate();
+  res.set({
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Cache-Control': 'no-store',
+  });
+  res.send(content);
+});
+
+/** Body: { table: string[][] (first row = headers), commit?: boolean }. Without commit nothing is saved. */
+export const importStudents = asyncHandler(async (req, res) => {
+  const { table, commit } = req.body ?? {};
+  if (!Array.isArray(table)) throw ApiError.badRequest('Upload a CSV or Excel file with a header row', { file: 'No data' });
+  const cells = table.map((row) => (Array.isArray(row) ? row.map((cell) => (cell === null || cell === undefined ? '' : String(cell))) : row));
+  if (commit === true) {
+    const result = await importService.commitImport(cells, auditContext(req));
+    res.status(201).json({ success: true, data: result, message: `${result.created.length} student(s) registered` });
+    return;
+  }
+  res.json({ success: true, data: await importService.previewImport(cells) });
 });
 
 export const getStudent = asyncHandler(async (req, res) => {

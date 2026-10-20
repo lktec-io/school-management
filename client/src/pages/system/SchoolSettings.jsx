@@ -41,6 +41,7 @@ function ProfileForm({ profile, onSaved }) {
     email: profile.email ?? '',
     website: profile.website ?? '',
     instagramUrl: profile.instagramUrl ?? '',
+    instagramReels: (profile.instagramReels ?? '').split('\n').filter(Boolean).map((code) => `https://www.instagram.com/reel/${code}/`).join('\n'),
     motto: profile.motto ?? '',
     headmasterName: profile.headmasterName ?? '',
     bursarName: profile.bursarName ?? '',
@@ -84,6 +85,10 @@ function ProfileForm({ profile, onSaved }) {
           </FormField>
           <FormField label="Instagram page" error={errors.instagramUrl} className="span-2" hint="e.g. https://www.instagram.com/your_school — shown as “Follow us” on the public website">
             <input className="form-control" placeholder="https://www.instagram.com/" {...bind('instagramUrl')} />
+          </FormField>
+          <FormField label="Instagram reels on the website" error={errors.instagramReels} className="span-2"
+            hint="Paste up to 3 reel links, one per line (Instagram → Share → Copy link). The first one is featured.">
+            <textarea className="form-control mono" rows={3} placeholder="https://www.instagram.com/reel/…" {...bind('instagramReels')} />
           </FormField>
           <FormField label="Headmaster's name" error={errors.headmasterName} hint="Printed under the signature on report cards">
             <input className="form-control" {...bind('headmasterName')} />

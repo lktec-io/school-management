@@ -11,7 +11,7 @@ import { parseId, validator } from '../../utils/validator.js';
 import * as announcements from './announcements.service.js';
 import * as backups from './backup.service.js';
 import * as branding from './branding.service.js';
-import { getSettings, updateProfile } from './settings.service.js';
+import { MAX_INSTAGRAM_REELS, getSettings, parseReelCodes, updateProfile } from './settings.service.js';
 
 export const getSettingsHandler = asyncHandler(async (req, res) => {
   const [settings, assets] = await Promise.all([getSettings({ fresh: true }), branding.assetStatus()]);
@@ -32,7 +32,16 @@ export const updateSettingsHandler = asyncHandler(async (req, res) => {
     .string('bursarName', { max: 150 })
     .string('vision', { max: 600, multiline: true })
     .string('mission', { max: 600, multiline: true })
+    .string('instagramReels', { max: 1000, multiline: true })
+    .rule('instagramReels', ({ instagramReels }) => {
+      if (!instagramReels) return null;
+      const { codes, invalid } = parseReelCodes(instagramReels);
+      if (invalid.length) return `Not an Instagram reel link: ${invalid[0].slice(0, 60)}`;
+      return codes.length > MAX_INSTAGRAM_REELS ? `Add at most ${MAX_INSTAGRAM_REELS} reels` : null;
+    })
     .result();
+  // Stored as bare reel codes, one per line, in the order given.
+  if (data.instagramReels) data.instagramReels = parseReelCodes(data.instagramReels).codes.join('\n');
   const settings = await updateProfile(data, req.user, auditContext(req));
   res.json({ success: true, data: { profile: settings.profile }, message: 'School settings saved' });
 });

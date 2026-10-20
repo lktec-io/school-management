@@ -7,8 +7,9 @@
  *    name (landscape, ≥1600px wide) or point IMAGES / SLIDES / TOURS below at a new file.
  *  - Administration photos: copy portraits to client/public/images/staff/ using the file names in
  *    STAFF (JPG, roughly 4:5). Until a photo exists, an initials frame is shown.
- *  - Instagram: reels in INSTAGRAM_REELS are embedded on the page; the “Follow us” link comes from
- *    School Settings → Instagram page.
+ *  - The two Trifonia photos (trifonia-*.jpg) are stills from the school's own YouTube channel.
+ *  - Instagram: the reels come from School Settings → Instagram reels (up to three; INSTAGRAM_REELS
+ *    below is only used until that is saved); the “Follow us” link is School Settings → Instagram page.
  *  - School name, registration number, motto, phones, vision, mission and the headmaster's name come
  *    from School Settings in the portal; announcements are managed there too.
  *  - Portal and login-page labels live in src/i18n/locales/ (sw.js, en.js).
@@ -20,11 +21,11 @@ const tours = (file) => `/images/tours/${file}`;
 export const IMAGES = {
   overview: campus('teacher-with-students.jpg'),
   administration: campus('teacher-chalkboard.jpg'),
-  parents: campus('student-portrait.jpg'),
+  parents: campus('trifonia-students-blue-uniform.jpg'),
   scienceLab: campus('science-lab-microscope.jpg'),
   practical: campus('science-lab-practical.jpg'),
   computer: campus('digital-learning.jpg'),
-  cta: campus('school-outreach-class.jpg'),
+  cta: campus('trifonia-scouts-anniversary.jpg'),
   login: campus('secondary-class-lesson.jpg'),
 };
 
@@ -45,8 +46,8 @@ export const TOURS = [
   { id: 'bagamoyo', image: tours('bagamoyo.jpg'), name: 'Bagamoyo', note: { sw: 'Mji wa kihistoria', en: 'Historic coastal town' } },
 ];
 
-/** Instagram reels embedded on the page (https://www.instagram.com/reel/<code>/). */
-export const INSTAGRAM_REELS = ['Dd_c3hOgiCW'];
+/** Fallback reels (https://www.instagram.com/reel/<code>/) until School Settings lists the school's own. */
+export const INSTAGRAM_REELS = ['DdgH5x0gtdl', 'Dd_c3hOgiCW'];
 
 /** School administration (no political office holders). `nameFrom` reads a name from School Settings. */
 export const STAFF = [
@@ -138,10 +139,12 @@ const sw = {
   media: {
     eyebrow: 'Trifonia Kwenye Mitandao',
     title: 'Tazama maisha ya shule',
-    lead: 'Video fupi kutoka kwenye ukurasa wetu wa Instagram.',
+    lead: 'Video fupi kutoka kwenye ukurasa wetu wa Instagram — matukio, masomo na sherehe za shule.',
     follow: 'Tufuate Instagram',
     open: 'Fungua kwenye Instagram',
     frameTitle: 'Video ya Trifonia Academy kwenye Instagram',
+    reel: 'Video',
+    watch: 'Tazama kwenye Instagram',
   },
   administration: {
     eyebrow: 'Muundo wa Uongozi',
@@ -160,7 +163,7 @@ const sw = {
       { key: 'sms', title: 'Taarifa kwa SMS', text: 'Pokea uthibitisho wa malipo, matokeo na matangazo kwa simu.' },
     ],
     action: 'Ingia kama mzazi',
-    imageAlt: 'Mwanafunzi katika sare ya shule',
+    imageAlt: 'Wanafunzi wa Trifonia Academy katika sare ya shule',
   },
   announcements: {
     eyebrow: 'Matangazo',
@@ -259,10 +262,12 @@ const en = {
   media: {
     eyebrow: 'Trifonia Online',
     title: 'See school life in action',
-    lead: 'Short videos from our Instagram page.',
+    lead: 'Short videos from our Instagram page — events, lessons and school celebrations.',
     follow: 'Follow us on Instagram',
     open: 'Open on Instagram',
     frameTitle: 'Trifonia Academy video on Instagram',
+    reel: 'Video',
+    watch: 'Watch on Instagram',
   },
   administration: {
     eyebrow: 'Administrative Structure',
@@ -281,7 +286,7 @@ const en = {
       { key: 'sms', title: 'SMS notifications', text: 'Receive payment confirmations, results and announcements by phone.' },
     ],
     action: 'Login as a parent',
-    imageAlt: 'A student in school uniform',
+    imageAlt: 'Trifonia Academy students in school uniform',
   },
   announcements: {
     eyebrow: 'Announcements',

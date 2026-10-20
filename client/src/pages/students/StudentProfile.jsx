@@ -138,6 +138,7 @@ export default function StudentProfile() {
           <dl className="definition-list card__body">
             <dt>{t('students.fields.guardianName')}</dt><dd>{student.parentName}</dd>
             <dt>{t('students.fields.guardianPhone')}</dt><dd className="mono">{formatPhone(student.parentPhone)}</dd>
+            <dt>{t('students.fields.relationship')}</dt><dd>{student.parentRelationship || '—'}</dd>
             <dt>{t('students.fields.parentAccount')}</dt><dd>{student.parentAccountName || <span className="text-muted">{t('students.fields.notLinked')}</span>}</dd>
           </dl>
         </section>
@@ -156,17 +157,17 @@ export default function StudentProfile() {
           {fees.currentTerm ? (
             <div className="card__body">
               <dl className="kv-grid">
-                <div><dt>{fees.currentTerm.termName} — bill</dt><dd className="amount">{formatMoney(fees.currentTerm.gross)}</dd></div>
+                <div><dt>{t('students.profile.bill', { term: fees.currentTerm.termName })}</dt><dd className="amount">{formatMoney(fees.currentTerm.gross)}</dd></div>
                 {fees.currentTerm.discount > 0 && (
                   <div>
-                    <dt>Discounts</dt>
+                    <dt>{t('students.profile.discounts')}</dt>
                     <dd className="amount amount--positive" title={fees.currentTerm.discounts.map((d) => d.reason).join(', ')}>−{formatMoney(fees.currentTerm.discount)}</dd>
                   </div>
                 )}
-                <div><dt>Expected</dt><dd className="amount">{formatMoney(fees.currentTerm.expected)}</dd></div>
-                <div><dt>Paid this term</dt><dd className="amount amount--positive">{formatMoney(fees.currentTerm.paid)}</dd></div>
+                <div><dt>{t('students.profile.expected')}</dt><dd className="amount">{formatMoney(fees.currentTerm.expected)}</dd></div>
+                <div><dt>{t('students.profile.paidTerm')}</dt><dd className="amount amount--positive">{formatMoney(fees.currentTerm.paid)}</dd></div>
                 <div>
-                  <dt>Balance</dt>
+                  <dt>{t('students.profile.balance')}</dt>
                   <dd className={`amount ${fees.currentTerm.balance > 0 ? 'amount--negative' : 'amount--positive'}`}>
                     {formatMoney(fees.currentTerm.balance)}
                   </dd>
@@ -174,7 +175,7 @@ export default function StudentProfile() {
               </dl>
             </div>
           ) : (
-            <div className="card__body text-sm text-muted">No current term is set, so the term balance cannot be calculated.</div>
+            <div className="card__body text-sm text-muted">{t('students.profile.noTerm')}</div>
           )}
           <div className="table-wrapper">
             <table className="data-table data-table--cards">
@@ -187,7 +188,7 @@ export default function StudentProfile() {
               </thead>
               <tbody>
                 {fees.payments.length === 0 && (
-                  <tr><td colSpan={9} className="data-table__empty">No payments recorded yet.</td></tr>
+                  <tr><td colSpan={9} className="data-table__empty">{t('students.profile.noPayments')}</td></tr>
                 )}
                 {fees.payments.map((payment) => (
                   <tr key={payment.id} className={payment.status === 'reversed' ? 'is-muted' : undefined}>
@@ -218,7 +219,7 @@ export default function StudentProfile() {
           <div className="card__header"><h2 className="card__title">{t('students.profile.performance')}</h2></div>
           {performance.length === 0 ? (
             <div className="card__body">
-              <EmptyState icon={FileText} title="No results yet" message={isParent ? 'Results appear here once the school publishes them.' : 'No marks have been recorded for this student.'} />
+              <EmptyState icon={FileText} title={t('students.profile.noResults')} message={isParent ? t('students.profile.noResultsParent') : t('students.profile.noResultsStaff')} />
             </div>
           ) : (
             <div className="table-wrapper">
@@ -247,7 +248,7 @@ export default function StudentProfile() {
                       <td data-label={t('students.profile.position')} className="numeric"><span className="mono">{row.classPosition} / {row.classSize}</span></td>
                       <td className="actions">
                         <Link to={`/reports?studentId=${student.id}&examId=${row.examId}`} className="btn btn--ghost btn--sm">
-                          <FileText size={14} aria-hidden="true" /> Report
+                          <FileText size={14} aria-hidden="true" /> {t('students.profile.report')}
                         </Link>
                       </td>
                     </tr>

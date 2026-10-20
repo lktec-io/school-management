@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   address: '',
   parentName: '',
   parentPhone: '',
+  parentRelationship: '',
   parentUserId: '',
 };
 
@@ -88,6 +89,8 @@ function StudentFormBody({ student, classes }) {
   const streams = classes.find((cls) => String(cls.id) === String(values.classId))?.streams ?? [];
   const normalisedPhone = previewPhone(values.parentPhone);
   const admissionYear = (values.admissionDate || todayIso()).slice(0, 4);
+  // Exact next number (S1819/2026/014) for this admission year; reserved only when the form is saved.
+  const nextNumber = useApi(editing ? null : '/students/next-registration-number', { admissionDate: values.admissionDate || todayIso() });
   const fullName = [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' ');
 
   const savePhoto = async (studentId) => {
@@ -207,6 +210,12 @@ function StudentFormBody({ student, classes }) {
           >
             <input className="form-control mono" inputMode="tel" placeholder="0777 123 456" {...bind('parentPhone')} />
           </FormField>
+          <FormField label={t('students.fields.relationship')} error={errors.parentRelationship}>
+            <input className="form-control" list="relationship-options" maxLength={40} placeholder={t('students.fields.relationshipPlaceholder')} {...bind('parentRelationship')} />
+            <datalist id="relationship-options">
+              {['Baba', 'Mama', 'Mlezi', 'Kaka', 'Dada', 'Babu', 'Bibi', 'Mjomba', 'Shangazi'].map((option) => <option key={option} value={option} />)}
+            </datalist>
+          </FormField>
           <FormField label={t('students.fields.parentAccount')} error={errors.parentUserId} hint={t('students.fields.parentAccountHint')}>
             <select className="form-control" {...bind('parentUserId')}>
               <option value="">{t('students.fields.notLinked')}</option>
@@ -230,8 +239,10 @@ function StudentFormBody({ student, classes }) {
             <div className="regno-preview">
               <Hash size={16} aria-hidden="true" />
               <div>
-                <span className="regno-preview__label">{t('students.fields.regNo')}</span>
-                <span className="reg-no">{editing ? student.registrationNumber : `${school?.regNumberPrefix ?? '…'}/${admissionYear}/###`}</span>
+                <span className="regno-preview__label">{editing ? t('students.fields.regNo') : t('students.form.regNoNext')}</span>
+                <span className="reg-no">
+                  {editing ? student.registrationNumber : nextNumber.data?.registrationNumber ?? `${school?.regNumberPrefix ?? '…'}/${admissionYear}/###`}
+                </span>
               </div>
             </div>
             {!editing && <p className="text-xs text-muted">{t('students.form.regNoHint')}</p>}

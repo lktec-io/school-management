@@ -1,16 +1,16 @@
 /**
  * Change the prefix of existing registration numbers, e.g. ZNZ/2026/001 → S1819/2026/001.
- * New students already use REG_NUMBER_PREFIX; this converts records created before it changed.
+ * New students already get the school's registration number as prefix; this converts older records.
  *
  *   npm run reg:renumber -- --from ZNZ                 # preview only (default)
  *   npm run reg:renumber -- --from ZNZ --apply         # write the changes
  *   npm run reg:renumber -- --from ZNZ --to S1819 --apply
  *
- * --to defaults to REG_NUMBER_PREFIX. Year and sequence are kept; the change is recorded in the
+ * --to defaults to the registration number in School Settings (S1819). Year and sequence are kept; the change is recorded in the
  * audit log. Reports and receipts printed earlier keep the old number on paper.
  */
-import env from '../config/env.js';
 import { closePool, query, withTransaction } from '../config/db.js';
+import { registrationPrefix } from '../modules/system/settings.service.js';
 import { recordAudit } from '../utils/audit.js';
 
 function argument(name) {
@@ -19,7 +19,7 @@ function argument(name) {
 }
 
 const from = argument('from');
-const to = argument('to') ?? env.school.regNumberPrefix;
+const to = argument('to') ?? await registrationPrefix();
 const apply = process.argv.includes('--apply');
 const PREFIX = /^[A-Za-z0-9-]{1,20}$/;
 

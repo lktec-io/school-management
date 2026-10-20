@@ -47,7 +47,8 @@ function render(message, context) {
 
 function studentContext(row, schoolName) {
   return {
-    parent_name: row.parentName,
+    // Guardian names go out in capitals ("KUSEKWA KULWA"), as on official school notices.
+    parent_name: String(row.parentName ?? '').replace(/\s+/g, ' ').trim().toLocaleUpperCase('sw-TZ'),
     student_name: [row.firstName, row.middleName, row.lastName].filter(Boolean).join(' '),
     first_name: row.firstName,
     reg_no: row.registrationNumber,

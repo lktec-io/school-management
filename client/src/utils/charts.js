@@ -2,14 +2,14 @@ import { dateLocale } from '../i18n/index.js';
 import { formatNumber } from './format.js';
 
 /** Chart palette: primary blue, success green, gold, info, danger, greys. */
-export const CHART_COLORS = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#dc3545', '#6c757d', '#343a40'];
+export const CHART_COLORS = ['#1e40af', '#28a745', '#ffc107', '#17a2b8', '#dc3545', '#64748b', '#0f172a'];
 export const SERIES = {
-  primary: '#007bff',
+  primary: '#1e40af',
   accent: '#ffc107',
   sky: '#17a2b8',
   success: '#28a745',
   danger: '#dc3545',
-  muted: '#ced4da',
+  muted: '#cbd5e1',
 };
 
 /** Compact axis labels: 1,250,000 → 1.3M. */

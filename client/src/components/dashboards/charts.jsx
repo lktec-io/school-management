@@ -3,8 +3,8 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { compactNumber } from '../../utils/charts.js';
 import { formatMoney, formatNumber } from '../../utils/format.js';
 
-const AXIS = { fontSize: 12, fill: '#6c757d' };
-const GRID = '#e9ecef';
+const AXIS = { fontSize: 12, fill: '#64748b' };
+const GRID = '#e2e8f0';
 
 function ChartTooltip({ active, payload, label, money, percent, labelFormatter }) {
   if (!active || !payload?.length) return null;

@@ -39,6 +39,8 @@ const imageJson = express.json({ limit: '3mb' });
 const PHOTO_UPLOAD_PATH = /^\/api\/v1\/(students\/\d+\/photo|auth\/me\/photo)$/;
 app.use('/api/v1/system/branding', imageJson);
 app.use((req, res, next) => (PHOTO_UPLOAD_PATH.test(req.path) ? imageJson(req, res, next) : next()));
+// Bulk student import: up to 500 spreadsheet rows as a JSON grid.
+app.use('/api/v1/students/import', express.json({ limit: '2mb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 

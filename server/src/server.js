@@ -1,6 +1,7 @@
 import env from './config/env.js';
 import app from './app.js';
 import { closePool, pingDatabase } from './config/db.js';
+import { registrationPrefix } from './modules/system/settings.service.js';
 import { credentialDiagnostics, isSmsConfigured, recoverInterruptedMessages } from './services/smsService.js';
 import logger from './utils/logger.js';
 
@@ -23,6 +24,10 @@ async function start() {
   } else {
     const { apiKey, secretKey, senderId, fingerprint } = credentialDiagnostics();
     logger.info('Beem SMS configured', { apiKey, secretKey, senderId, fingerprint, pid: process.pid });
+  }
+  if (process.env.REG_NUMBER_PREFIX) {
+    logger.warn('REG_NUMBER_PREFIX is no longer used and can be removed from .env; new registration numbers use the '
+      + 'registration number in School Settings', { prefix: await registrationPrefix().catch(() => null) });
   }
   if (env.beem.overriddenFromFile.length) {
     logger.warn('Stale SMS credentials in the process environment were replaced by server/.env', { keys: env.beem.overriddenFromFile });

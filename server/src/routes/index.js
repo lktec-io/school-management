@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import env from '../config/env.js';
 import { pingDatabase } from '../config/db.js';
 import { authenticate, requirePasswordChanged } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
@@ -13,7 +12,7 @@ import reportsRoutes from '../modules/reports/reports.routes.js';
 import smsRoutes from '../modules/sms/sms.routes.js';
 import studentsRoutes from '../modules/students/students.routes.js';
 import { assetStatus } from '../modules/system/branding.service.js';
-import { getSchoolProfile } from '../modules/system/settings.service.js';
+import { getSchoolProfile, parseReelCodes, prefixFromRegistrationNo } from '../modules/system/settings.service.js';
 import { publicAnnouncements, serveAsset } from '../modules/system/system.controller.js';
 import systemRoutes from '../modules/system/system.routes.js';
 import usersRoutes from '../modules/users/users.routes.js';
@@ -35,8 +34,9 @@ router.get('/school', asyncHandler(async (req, res) => {
       name, motto, address, phone, email, website, instagramUrl, registrationNo, headmasterName, vision, mission,
       hasLogo: branding.assets.logo.uploaded || Boolean(branding.assets.logo.fromEnv),
       logoVersion: branding.version,
-      // Printed on every report card and receipt; shown as a preview when registering students.
-      regNumberPrefix: env.school.regNumberPrefix,
+      // Prefix of new registration numbers (S1819/2026/001), shown as a preview when registering students.
+      regNumberPrefix: prefixFromRegistrationNo(registrationNo),
+      instagramReels: parseReelCodes(profile.instagramReels).codes,
     },
   });
 }));

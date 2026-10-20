@@ -152,7 +152,6 @@ const env = Object.freeze({
     email: read('SCHOOL_EMAIL'),
     motto: read('SCHOOL_MOTTO'),
     logoPath: read('SCHOOL_LOGO_PATH'),
-    regNumberPrefix: read('REG_NUMBER_PREFIX', { fallback: 'S1819' }),
   }),
 
   storage: Object.freeze({

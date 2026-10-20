@@ -17,6 +17,7 @@ export const PROFILE_FIELDS = {
   email: 'email',
   website: 'website',
   instagramUrl: 'instagram_url',
+  instagramReels: 'instagram_reels',
   motto: 'motto',
   headmasterName: 'headmaster_name',
   bursarName: 'bursar_name',
@@ -44,6 +45,7 @@ function envDefaults() {
     email: env.school.email ?? null,
     website: null,
     instagramUrl: null,
+    instagramReels: null,
     motto: env.school.motto ?? null,
     headmasterName: null,
     bursarName: null,
@@ -91,6 +93,47 @@ export async function getSettings({ fresh = false } = {}) {
 
 export async function getSchoolProfile() {
   return (await getSettings()).profile;
+}
+
+export const DEFAULT_REGISTRATION_PREFIX = 'S1819';
+export const MAX_INSTAGRAM_REELS = 3;
+const REEL_CODE = /^[A-Za-z0-9_-]{5,40}$/;
+
+/**
+ * Prefix of new student registration numbers (S1819/2026/001): the school's official registration
+ * number from School Settings, e.g. "S1819" or "Reg. No. S1819" → "S1819". "/" separates the parts of a
+ * registration number, so slashes inside the school's number become hyphens ("ZEC/PS/0142" → "ZEC-PS-0142").
+ */
+export function prefixFromRegistrationNo(registrationNo) {
+  const tokens = String(registrationNo ?? '').toUpperCase().split(/[\s:#,]+/)
+    .map((token) => token.replace(/\//g, '-').replace(/[^A-Z0-9-]/g, '').replace(/^-+|-+$/g, ''))
+    .filter((token) => token && token.length <= 20);
+  // Words such as "Reg." / "No." are skipped by preferring the last part that contains a digit.
+  const numbered = tokens.filter((token) => /\d/.test(token));
+  return numbered.at(-1) || (tokens.length === 1 ? tokens[0] : DEFAULT_REGISTRATION_PREFIX);
+}
+
+export async function registrationPrefix() {
+  return prefixFromRegistrationNo((await getSchoolProfile()).registrationNo);
+}
+
+/**
+ * Reel links or codes, one per line → ["DdgH5x0gtdl", …]. Accepts full links such as
+ * https://www.instagram.com/reel/DdgH5x0gtdl/?rpxt=… Returns { codes, invalid } so callers can report bad lines.
+ */
+export function parseReelCodes(text) {
+  const codes = [];
+  const invalid = [];
+  for (const line of String(text ?? '').split(/[\r\n]+/).map((value) => value.trim()).filter(Boolean)) {
+    const fromUrl = line.match(/^https:\/\/(?:www\.)?instagram\.com\/(?:reels?|p)\/([A-Za-z0-9_-]{5,40})(?:[/?#].*)?$/i);
+    const code = fromUrl ? fromUrl[1] : REEL_CODE.test(line) ? line : null;
+    if (code) {
+      if (!codes.includes(code)) codes.push(code);
+    } else {
+      invalid.push(line);
+    }
+  }
+  return { codes, invalid };
 }
 
 /** Save profile fields; null/empty reverts a field to its .env default. */

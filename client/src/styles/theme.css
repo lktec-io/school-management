@@ -8,53 +8,54 @@
 
 :root {
   /* ---- Brand palette ---------------------------------------------
-     Primary blue #007bff, dark #343a40, success #28a745, danger #dc3545, warning/gold #ffc107.
+     Deep navy #0f172a / #1e293b (sidebar, headings, footer), accent blue #1e40af / #2563eb
+     (buttons, links, active states), success #28a745, danger #dc3545, gold #ffc107.
      (Token names are kept from the first theme so every component follows.) */
-  --color-navy-900: #343a40;   /* secondary / dark — sidebar, footer, hero */
-  --color-navy-800: #007bff;   /* primary blue — buttons, links, active states */
-  --color-navy-700: #0069d9;   /* primary hover */
-  --color-slate-700: #0056b3;  /* links / info text (AA on white) */
-  --color-slate-600: #0069d9;
-  --color-steel-400: #adb5bd;  /* dividers, muted icons */
-  --color-steel-200: #ced4da;
-  --color-steel-100: #e9ecef;
-  --color-mist-50: #f8f9fa;    /* page background */
+  --color-navy-900: #0f172a;   /* primary navy — sidebar, footer, hero, headings */
+  --color-navy-800: #1e40af;   /* accent blue — primary buttons, links, active states */
+  --color-navy-700: #1e3a8a;   /* primary hover */
+  --color-slate-700: #1e40af;  /* links / info text (AA on white) */
+  --color-slate-600: #2563eb;  /* brighter accent */
+  --color-steel-400: #94a3b8;  /* dividers, muted icons */
+  --color-steel-200: #cbd5e1;
+  --color-steel-100: #e2e8f0;
+  --color-mist-50: #f8fafc;    /* page background */
   --color-white: #ffffff;
 
-  --color-charcoal-900: #212529;
-  --color-charcoal-700: #495057;
-  --color-charcoal-500: #6c757d;
-  --color-charcoal-300: #adb5bd;
+  --color-charcoal-900: #1e293b;
+  --color-charcoal-700: #334155;
+  --color-charcoal-500: #64748b;
+  --color-charcoal-300: #94a3b8;
 
-  --color-gold-500: #ffc107;   /* warning / gold — highlights, active nav marker, accents */
+  --color-gold-500: #ffc107;   /* gold — highlights and accents */
   --color-gold-400: #ffcd39;
   --color-gold-100: #fff3cd;
-  --color-slate-200: #dee2e6;  /* borders */
-  --color-slate-50: #f8f9fa;
+  --color-slate-200: #e2e8f0;  /* borders */
+  --color-slate-50: #f8fafc;
 
   /* ---- Semantic colours ------------------------------------------ */
   --color-primary: var(--color-navy-800);
   --color-primary-hover: var(--color-navy-700);
-  --color-primary-active: #0062cc;
-  --color-secondary: #343a40;
-  --color-secondary-hover: #23272b;
+  --color-primary-active: #172554;
+  --color-secondary: #1e293b;
+  --color-secondary-hover: #0f172a;
   --color-accent: var(--color-gold-500);
-  --color-heading: #343a40;
+  --color-heading: #0f172a;
 
   --color-bg: var(--color-mist-50);
   --color-surface: var(--color-white);
-  --color-surface-muted: #f8f9fa;
-  --color-surface-sunken: #f1f3f5;
-  --color-border: #dee2e6;
-  --color-border-strong: #ced4da;
+  --color-surface-muted: #f8fafc;
+  --color-surface-sunken: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
 
   --color-text: var(--color-charcoal-900);
   --color-text-secondary: var(--color-charcoal-700);
   --color-text-muted: var(--color-charcoal-500);
   --color-text-disabled: var(--color-charcoal-300);
   --color-text-inverse: var(--color-white);
-  --color-link: #0056b3;
-  --color-link-hover: #004085;
+  --color-link: #1e40af;
+  --color-link-hover: #1e3a8a;
 
   /* Status colours. The base values are the brand fills; *-text are darker shades
      used for small text on light backgrounds so it stays readable (WCAG AA). */
@@ -70,15 +71,15 @@
   --color-danger-text: #bd2130;
   --color-danger-bg: #fdf2f3;
   --color-danger-border: #f5c6cb;
-  --color-info: #007bff;
-  --color-info-text: #0056b3;
-  --color-info-bg: #e7f1ff;
-  --color-info-border: #b8daff;
+  --color-info: #2563eb;
+  --color-info-text: #1e40af;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
   --color-neutral: var(--color-charcoal-700);
-  --color-neutral-bg: #f1f3f5;
-  --color-neutral-border: #dee2e6;
+  --color-neutral-bg: #f1f5f9;
+  --color-neutral-border: #e2e8f0;
 
-  --color-focus-ring: #80bdff;
+  --color-focus-ring: #93c5fd;
 
   /* ---- Typography ------------------------------------------------- */
   --font-heading: "Quicksand", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -130,23 +131,23 @@
   --radius-lg: 5px;
   --radius-pill: 5px;
 
-  --shadow-xs: 0 1px 1px rgba(52, 58, 64, 0.06);
-  --shadow-card: 0 1px 2px rgba(52, 58, 64, 0.04);
-  --shadow-hover: 0 2px 8px rgba(52, 58, 64, 0.07);
-  --shadow-raised: 0 4px 12px rgba(52, 58, 64, 0.08);
-  --shadow-overlay: 0 12px 32px rgba(52, 58, 64, 0.24);
-  --shadow-focus: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  --shadow-xs: 0 1px 1px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 2px 8px rgba(15, 23, 42, 0.07);
+  --shadow-raised: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-overlay: 0 12px 32px rgba(15, 23, 42, 0.24);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.25);
 
   /* ---- Tables (high-density data grids) -------------------------- */
   --table-font-size: var(--text-sm);
   --table-cell-padding-y: 0.625rem;
   --table-cell-padding-x: 0.875rem;
-  --table-header-bg: #f8f9fa;
+  --table-header-bg: #f8fafc;
   --table-header-text: var(--color-charcoal-500);
   --table-row-stripe: transparent;
-  --table-row-hover: #f8f9fa;
-  --table-row-selected: #e7f1ff;
-  --table-border: #dee2e6;
+  --table-row-hover: #f8fafc;
+  --table-row-selected: #eff6ff;
+  --table-border: #e2e8f0;
 
   /* ---- Controls --------------------------------------------------- */
   --control-height: 36px;
@@ -154,7 +155,7 @@
   --control-height-lg: 42px;
   --control-padding-x: 0.875rem;
   /* Inputs need ≥3:1 boundary contrast (WCAG 1.4.11), so they use a darker slate than card borders. */
-  --control-border: #ced4da;
+  --control-border: #cbd5e1;
 
   /* ---- Motion & stacking ----------------------------------------- */
   --transition-fast: 120ms ease-out;
@@ -329,6 +330,7 @@ button, input, select, textarea { font-family: var(--font-body); }
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  border: none;
   background: var(--color-navy-900);
   color: var(--color-steel-200);
 }
@@ -343,7 +345,6 @@ button, input, select, textarea { font-family: var(--font-body); }
   font-family: var(--font-heading);
   font-weight: var(--weight-bold);
   line-height: var(--leading-snug);
-  border-bottom: 1px solid rgba(141, 169, 196, 0.25);
 }
 
 .app-sidebar__nav {
@@ -372,28 +373,27 @@ button, input, select, textarea { font-family: var(--font-body); }
   min-height: 42px;
   padding: var(--space-2) var(--space-3);
   border-radius: 5px;
-  color: #ced4da;
+  color: #cbd5e1;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   text-decoration: none;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
-.nav-link svg { flex-shrink: 0; color: #adb5bd; }
+.nav-link svg { flex-shrink: 0; color: #94a3b8; }
 .nav-link:hover {
-  background: rgba(148, 163, 184, 0.12);
+  background: rgba(148, 163, 184, 0.1);
   color: var(--color-white);
   text-decoration: none;
 }
 .nav-link:hover svg { color: var(--color-white); }
 .nav-link.active,
 .nav-link[aria-current="page"] {
-  background: var(--color-navy-800);
-  box-shadow: inset 3px 0 0 var(--color-gold-400);
+  background: rgba(59, 130, 246, 0.18);
   color: var(--color-white);
   font-weight: var(--weight-semibold);
 }
 .nav-link.active svg,
-.nav-link[aria-current="page"] svg { color: var(--color-gold-400); }
+.nav-link[aria-current="page"] svg { color: #93c5fd; }
 
 .app-main {
   grid-area: main;
@@ -496,7 +496,7 @@ button, input, select, textarea { font-family: var(--font-body); }
   text-decoration: none;
   transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
 }
-.stat-tile--info { background: #f3f8ff; border-color: #cce5ff; }
+.stat-tile--info { background: #f5f9ff; border-color: #dbeafe; }
 .stat-tile--success { background: #f1f9f2; border-color: #d4edda; }
 .stat-tile--danger { background: #fdf2f3; border-color: #f8d7da; }
 .stat-tile--warning { background: #fffbf0; border-color: #ffeeba; }
@@ -532,7 +532,7 @@ button, input, select, textarea { font-family: var(--font-body); }
   height: 36px;
   border-radius: 5px;
   background: var(--color-white);
-  box-shadow: 0 0 0 1px rgba(52, 58, 64, 0.05);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
   color: var(--color-slate-700);
 }
 .stat-tile__icon--success { color: var(--color-success-text); }
@@ -896,16 +896,18 @@ textarea.form-control {
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-4);
-  background: rgba(52, 58, 64, 0.55);
+  background: rgba(15, 23, 42, 0.55);
 }
 .modal {
   display: flex;
   flex-direction: column;
   width: min(560px, 100%);
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-overlay);

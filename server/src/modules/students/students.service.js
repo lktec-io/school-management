@@ -1,16 +1,16 @@
 import path from 'node:path';
-import env from '../../config/env.js';
 import { query, queryOne, withTransaction } from '../../config/db.js';
 import { ApiError } from '../../middleware/errorHandler.js';
 import { recordAudit } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import { paginated } from '../../utils/pagination.js';
-import { nextSequenceValue } from '../../utils/sequences.js';
+import { nextSequenceValue, peekSequenceValue } from '../../utils/sequences.js';
 import { buildUpdateSet, likeContains, withNumbers } from '../../utils/sql.js';
 import { teacherClassIds } from '../academics/access.service.js';
 import { getCurrentPeriod } from '../academics/calendar.service.js';
 import { gradeFor, loadGradingScales, scaleForLevel } from '../exams/grading.js';
 import { studentTermBalance } from '../finance/balances.service.js';
+import { registrationPrefix } from '../system/settings.service.js';
 
 export const STUDENT_STATUSES = ['active', 'suspended', 'transferred', 'graduated', 'withdrawn'];
 
@@ -33,6 +33,7 @@ const STUDENT_COLUMNS = {
   streamId: 'stream_id',
   parentName: 'parent_name',
   parentPhone: 'parent_phone',
+  parentRelationship: 'parent_relationship',
   parentUserId: 'parent_user_id',
   address: 'address',
   admissionDate: 'admission_date',
@@ -43,7 +44,7 @@ const STUDENT_SELECT = `SELECT s.id, s.registration_number AS registrationNumber
     s.middle_name AS middleName, s.last_name AS lastName, s.gender, s.dob,
     s.class_id AS classId, c.class_name AS className, c.level,
     s.stream_id AS streamId, st.stream_name AS streamName,
-    s.parent_name AS parentName, s.parent_phone AS parentPhone,
+    s.parent_name AS parentName, s.parent_phone AS parentPhone, s.parent_relationship AS parentRelationship,
     s.parent_user_id AS parentUserId, pu.full_name AS parentAccountName,
     s.address, s.admission_date AS admissionDate, s.status, s.photo_path AS photoPath,
     s.created_at AS createdAt, s.updated_at AS updatedAt
@@ -178,41 +179,55 @@ export async function listStudents({ classId, streamId, status, gender, search, 
   return paginated(rows.map(decorate), total, pagination);
 }
 
+export function formatRegistrationNumber(prefix, year, sequence) {
+  return `${prefix}/${year}/${String(sequence).padStart(3, '0')}`;
+}
+
+/** The number the next student admitted in that year would get (preview only; assigned on save). */
+export async function previewRegistrationNumber(admissionDate = todayInSchoolTz()) {
+  const year = admissionDate.slice(0, 4);
+  return { registrationNumber: formatRegistrationNumber(await registrationPrefix(), year, await peekSequenceValue(`REGNO-${year}`)) };
+}
+
+/**
+ * Insert one validated student inside the caller's transaction: reserves the next PREFIX/YEAR/SEQ number
+ * and writes the audit entry. Returns { id, registrationNumber }.
+ */
+export async function insertStudent(connection, data, { prefix, context, source = 'form' }) {
+  const admissionDate = data.admissionDate ?? todayInSchoolTz();
+  const year = admissionDate.slice(0, 4);
+  const sequence = await nextSequenceValue(connection, `REGNO-${year}`);
+  const registrationNumber = formatRegistrationNumber(prefix, year, sequence);
+  const result = await query(
+    `INSERT INTO students (registration_number, first_name, middle_name, last_name, gender, dob, class_id,
+       stream_id, parent_name, parent_phone, parent_relationship, parent_user_id, address, admission_date, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+    [
+      registrationNumber, data.firstName, data.middleName ?? null, data.lastName, data.gender, data.dob,
+      data.classId, data.streamId ?? null, data.parentName, data.parentPhone, data.parentRelationship ?? null,
+      data.parentUserId ?? null, data.address ?? null, admissionDate,
+    ],
+    connection,
+  );
+  await recordAudit(
+    {
+      ...context,
+      action: 'student.register',
+      targetTable: 'students',
+      targetId: result.insertId,
+      details: { registrationNumber, ...data, admissionDate, ...(source === 'form' ? {} : { source }) },
+    },
+    connection,
+  );
+  return { id: result.insertId, registrationNumber };
+}
+
 export async function registerStudent(data, context) {
   await assertPlacement(data.classId, data.streamId);
   if (data.parentUserId) await assertParentAccount(data.parentUserId);
-
-  const admissionDate = data.admissionDate ?? todayInSchoolTz();
-  const year = admissionDate.slice(0, 4);
-
-  const studentId = await withTransaction(async (connection) => {
-    const sequence = await nextSequenceValue(connection, `REGNO-${year}`);
-    const registrationNumber = `${env.school.regNumberPrefix}/${year}/${String(sequence).padStart(3, '0')}`;
-    const result = await query(
-      `INSERT INTO students (registration_number, first_name, middle_name, last_name, gender, dob, class_id,
-         stream_id, parent_name, parent_phone, parent_user_id, address, admission_date, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [
-        registrationNumber, data.firstName, data.middleName ?? null, data.lastName, data.gender, data.dob,
-        data.classId, data.streamId ?? null, data.parentName, data.parentPhone, data.parentUserId ?? null,
-        data.address ?? null, admissionDate,
-      ],
-      connection,
-    );
-    await recordAudit(
-      {
-        ...context,
-        action: 'student.register',
-        targetTable: 'students',
-        targetId: result.insertId,
-        details: { registrationNumber, ...data, admissionDate },
-      },
-      connection,
-    );
-    return result.insertId;
-  });
-
-  return findStudent(studentId);
+  const prefix = await registrationPrefix();
+  const { id } = await withTransaction((connection) => insertStudent(connection, data, { prefix, context }));
+  return findStudent(id);
 }
 
 export async function updateStudent(id, data, context) {
