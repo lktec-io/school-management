@@ -9,7 +9,9 @@
 #   2. npm install for server and client (skipped when package-lock.json is unchanged)
 #   3. database migrations      (server: npm run db:migrate)
 #   4. production build         (client: npm run build)
-#   5. PM2 reload               (school-system-api, zero-downtime)
+#   5. PM2 reload               (school-system-api, zero-downtime) — or a fresh start when the
+#                                running process belongs to another checkout (e.g. an old app dir)
+#   6. smoke check              (API answers /health and runs from this checkout)
 #
 # Run it as the user that owns the PM2 process. To run from root on behalf of that
 # user:  RUN_AS=schoolapp ./deploy.sh
@@ -75,12 +77,61 @@ log "building client"
 [[ -f "$ROOT/client/dist/index.html" ]] || { log "build produced no client/dist/index.html"; exit 1; }
 
 # 5. Reload -------------------------------------------------------------
-if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
+# Directory the running PM2 process was started from ("" when it is not running).
+pm2_cwd() {
+  pm2 jlist 2>/dev/null | node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => {
+      try {
+        // pm2 may print "[PM2] ..." notices before the JSON list; start at the list itself.
+        const start = Math.min(...["[{", "[]"].map((token) => raw.indexOf(token)).filter((index) => index >= 0));
+        const app = JSON.parse(raw.slice(start)).find((p) => p.name === process.argv[1]);
+        process.stdout.write(app?.pm2_env?.pm_cwd ?? "");
+      } catch { /* pm2 printed no process list */ }
+    });' "$APP_NAME"
+}
+real_dir() { (cd "$1" 2>/dev/null && pwd -P) || printf '%s' "$1"; }
+
+SERVER_DIR="$(real_dir "$ROOT/server")"
+RUNNING_DIR="$(pm2_cwd)"
+# PM2 keeps the directory a process was first started from: reloading a process that was started in
+# another checkout (such as the old /var/www/school-system) would keep serving that old code.
+if [[ -n "$RUNNING_DIR" && "$(real_dir "$RUNNING_DIR")" != "$SERVER_DIR" ]]; then
+  log "$APP_NAME runs from $RUNNING_DIR, not $SERVER_DIR — recreating it from this checkout"
+  pm2 delete "$APP_NAME" >/dev/null
+  RUNNING_DIR=""
+fi
+if [[ -n "$RUNNING_DIR" ]]; then
   log "reloading $APP_NAME"
   pm2 reload "$APP_NAME" --update-env >/dev/null
 else
-  log "$APP_NAME not running — starting it from ecosystem.config.js"
+  log "starting $APP_NAME from $ROOT/ecosystem.config.js"
   (cd "$ROOT" && pm2 start ecosystem.config.js --env production >/dev/null && pm2 save >/dev/null)
 fi
+
+# 6. Smoke check --------------------------------------------------------
+if [[ "$(real_dir "$(pm2_cwd)")" != "$SERVER_DIR" ]]; then
+  log "ERROR: $APP_NAME is not running from $SERVER_DIR (pm2 reports: $(pm2_cwd))"
+  exit 1
+fi
+healthy=""
+for _ in $(seq 1 30); do
+  if curl -fsS --max-time 3 "http://127.0.0.1:${API_PORT:-5000}/api/v1/health" >/dev/null 2>&1; then healthy=1; break; fi
+  sleep 1
+done
+if [[ -z "$healthy" ]]; then
+  log "ERROR: API did not answer /api/v1/health on port ${API_PORT:-5000} — check: pm2 logs $APP_NAME"
+  exit 1
+fi
+log "API healthy, running from $SERVER_DIR"
+
+# Nginx must serve this checkout's build; warn (without failing) when the live site points elsewhere.
+for site in /etc/nginx/sites-enabled/*; do
+  [[ -r "$site" ]] || continue
+  served="$(grep -Eo 'root[[:space:]]+[^;]*client/dist' "$site" 2>/dev/null | awk '{print $2}' | head -n1)"
+  if [[ -n "$served" && "$(real_dir "$served")" != "$(real_dir "$ROOT/client/dist")" ]]; then
+    log "WARNING: nginx site $site serves $served — update its root to $ROOT/client/dist and run: sudo nginx -t && sudo systemctl reload nginx"
+  fi
+done
 
 log "done in $((SECONDS - START))s"

@@ -1522,3 +1522,16 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
   .import-table tr.is-invalid { border-bottom: none; }
   .import-table tr.import-problems-row { padding-top: 0; }
 }
+.import-report { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
+.import-report > div { padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-surface-muted); }
+.import-report dt { font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted); }
+.import-report dd { margin: var(--space-1) 0 0; font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-heading); }
+.import-report--ok { border-color: var(--color-success-border) !important; background: var(--color-success-bg) !important; }
+.import-report--ok dd { color: var(--color-success-text); }
+.import-report--bad { border-color: var(--color-danger-border) !important; background: var(--color-danger-bg) !important; }
+.import-report--bad dd { color: var(--color-danger-text); }
+.import-failed { display: grid; gap: var(--space-2); max-height: 34vh; margin: 0; padding: 0; overflow: auto; list-style: none; }
+.import-failed > li { padding: var(--space-2) var(--space-3); border: 1px solid var(--color-danger-border); border-left: 3px solid var(--color-danger); border-radius: 5px; background: var(--color-danger-bg); font-size: var(--text-sm); }
+.import-failed > li strong { color: var(--color-danger-text); }
+.import-failed ul { margin: var(--space-1) 0 0; padding-left: var(--space-5); color: var(--color-text-secondary); font-size: var(--text-xs); line-height: 1.5; }
+@media (max-width: 480px) { .import-report { grid-template-columns: minmax(0, 1fr); } }

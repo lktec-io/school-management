@@ -2,6 +2,7 @@ import { ApiError, asyncHandler } from '../../middleware/errorHandler.js';
 import { auditContext } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import { parsePagination } from '../../utils/pagination.js';
+import { SpreadsheetError, readSpreadsheet } from '../../utils/spreadsheet.js';
 import { optionalId, parseId, validator } from '../../utils/validator.js';
 import * as importService from './import.service.js';
 import * as photoService from './photo.service.js';
@@ -45,14 +46,33 @@ export const importTemplate = asyncHandler(async (req, res) => {
   res.send(content);
 });
 
-/** Body: { table: string[][] (first row = headers), commit?: boolean }. Without commit nothing is saved. */
+/**
+ * POST /students/import — either multipart/form-data with the spreadsheet in field "file" (CSV or .xlsx)
+ * and commit=true to save, or JSON { table: string[][] (first row = headers), commit?: boolean }.
+ * Without commit nothing is saved: the response previews every row. With commit the valid rows are
+ * registered and the response reports { total, imported, created[], failed[{ line, reasons, message }] }.
+ */
 export const importStudents = asyncHandler(async (req, res) => {
-  const { table, commit } = req.body ?? {};
-  if (!Array.isArray(table)) throw ApiError.badRequest('Upload a CSV or Excel file with a header row', { file: 'No data' });
+  let table;
+  if (req.file) {
+    try {
+      table = readSpreadsheet(req.file);
+    } catch (error) {
+      if (error instanceof SpreadsheetError) throw ApiError.badRequest(error.message, { file: error.message });
+      throw error;
+    }
+  } else {
+    table = req.body?.table;
+  }
+  if (!Array.isArray(table)) throw ApiError.badRequest('Upload a CSV or Excel (.xlsx) file in the "file" field', { file: 'No file received' });
   const cells = table.map((row) => (Array.isArray(row) ? row.map((cell) => (cell === null || cell === undefined ? '' : String(cell))) : row));
-  if (commit === true) {
+  const commit = req.body?.commit === true || req.body?.commit === 'true';
+  if (commit) {
     const result = await importService.commitImport(cells, auditContext(req));
-    res.status(201).json({ success: true, data: result, message: `${result.created.length} student(s) registered` });
+    const message = result.failed.length
+      ? `${result.imported} of ${result.total} student(s) imported; ${result.failed.length} row(s) failed`
+      : `All ${result.imported} student(s) imported`;
+    res.status(201).json({ success: true, data: result, message });
     return;
   }
   res.json({ success: true, data: await importService.previewImport(cells) });

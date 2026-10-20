@@ -213,6 +213,10 @@ export async function analyseImport(table) {
       valid,
       data: valid ? { ...data, classId: cls.id, streamId: stream?.id ?? null } : null,
       placement: cls ? [cls.className, stream?.streamName].filter(Boolean).join(' ') : null,
+      // Cleaned-up values shown in the preview even when another column makes the row invalid.
+      gender: data?.gender ?? (GENDERS[body.gender] && !errors.gender ? body.gender : null),
+      dob: data?.dob ?? (/^\d{4}-\d{2}-\d{2}$/.test(body.dob) && !errors.dob ? body.dob : null),
+      parentPhone: data?.parentPhone ?? (errors.parentPhone ? null : normalizeTzPhone(values.parentPhone)),
     });
   });
 
@@ -220,22 +224,44 @@ export async function analyseImport(table) {
   const validCount = rows.filter((row) => row.valid).length;
   return {
     columns: IMPORT_COLUMNS.map(({ key, header, required }) => ({ key, header, required: Boolean(required) })),
-    rows: rows.map(({ data, ...row }) => ({ ...row, gender: data?.gender ?? null, dob: data?.dob ?? null, parentPhone: data?.parentPhone ?? null })),
+    rows: rows.map((row) => ({ ...row, data: undefined })), // validated data stays server-side
     summary: { total: rows.length, valid: validCount, invalid: rows.length - validCount },
     validRows: rows.filter((row) => row.valid),
   };
 }
 
+const COLUMN_HEADERS = Object.fromEntries(IMPORT_COLUMNS.map((column) => [column.key, column.header]));
+
+/**
+ * Rejected rows in plain words, e.g. { line: 6, reasons: ['Class/Grade — No active class named "Form Nine" …'],
+ * message: 'Row 6: Class/Grade — No active class named "Form Nine" …' }.
+ */
+function failureReport(rows) {
+  return rows.filter((row) => !row.valid).map((row) => {
+    const reasons = Object.entries(row.errors).map(([field, message]) => `${COLUMN_HEADERS[field] ?? field} — ${message}`);
+    const name = [row.values.firstName, row.values.lastName].filter(Boolean).join(' ') || null;
+    return { line: row.line, name, reasons, message: `Row ${row.line}: ${reasons.join('; ')}` };
+  });
+}
+
 /** Preview: what would be imported, with every problem listed per row. Nothing is saved. */
 export async function previewImport(table) {
   const { validRows, ...result } = await analyseImport(table);
-  return { ...result, nextPrefix: await registrationPrefix(), validLines: validRows.map((row) => row.line) };
+  return {
+    ...result,
+    nextPrefix: await registrationPrefix(),
+    validLines: validRows.map((row) => row.line),
+    failed: failureReport(result.rows),
+  };
 }
 
 /** Save every valid row in one transaction (file order); invalid rows are skipped and reported back. */
 export async function commitImport(table, context) {
-  const { validRows, summary } = await analyseImport(table);
-  if (validRows.length === 0) throw ApiError.badRequest('None of the rows can be imported. Fix the highlighted problems and try again.');
+  const { validRows, rows, summary } = await analyseImport(table);
+  const failed = failureReport(rows);
+  if (validRows.length === 0) {
+    throw ApiError.badRequest(`None of the ${summary.total} row(s) can be imported. Fix the problems listed and upload the file again.`, { failed });
+  }
   const prefix = await registrationPrefix();
   const created = await withTransaction(async (connection) => {
     const saved = [];
@@ -251,7 +277,8 @@ export async function commitImport(table, context) {
     }, connection);
     return saved;
   });
-  return { created, skipped: summary.invalid, total: summary.total };
+  // Full report — nothing is processed silently: every row is either in `created` or in `failed` with its reasons.
+  return { total: summary.total, imported: created.length, skipped: failed.length, created, failed };
 }
 
 const BOM = String.fromCharCode(0xfeff);

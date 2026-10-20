@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { api, saveBlob } from '../../api/client.js';
 import { useSchoolProfile } from '../../hooks/useSchoolProfile.js';
 import { formatDate, formatPhone } from '../../utils/format.js';
-import { MAX_FILE_BYTES, readSpreadsheet } from '../../utils/spreadsheet.js';
 import { InlineAlert } from '../ui/Feedback.jsx';
 import Modal from '../ui/Modal.jsx';
 
@@ -23,7 +22,16 @@ const FIELD_LABELS = {
   address: 'students.fields.address',
 };
 
-const FILE_ERRORS = ['too-large', 'unsupported', 'empty', 'unreadable'];
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const ACCEPTED = /.(csv|xlsx|txt)$/i;
+
+/** multipart/form-data body for POST /students/import (the server parses the file). */
+function importForm(file, commit) {
+  const form = new FormData();
+  form.append('file', file);
+  if (commit) form.append('commit', 'true');
+  return form;
+}
 
 function templateFileName(schoolName) {
   const slug = String(schoolName ?? 'school').split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'school';
@@ -43,7 +51,6 @@ export default function ImportStudentsModal({ onClose, onImported }) {
   const [error, setError] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState(null);
-  const [table, setTable] = useState(null);
   const [preview, setPreview] = useState(null);
   const [filter, setFilter] = useState('all');
   const [result, setResult] = useState(null);
@@ -63,18 +70,23 @@ export default function ImportStudentsModal({ onClose, onImported }) {
   const handleFile = async (chosen) => {
     if (!chosen) return;
     setError(null);
+    if (!ACCEPTED.test(chosen.name)) {
+      setError(t('students.import.errors.unsupported'));
+      return;
+    }
+    if (chosen.size > MAX_FILE_BYTES) {
+      setError(t('students.import.errors.too-large', { size: MAX_FILE_BYTES / 1024 / 1024 }));
+      return;
+    }
     setFile(chosen);
-    setBusy('reading');
+    setBusy('checking');
     try {
-      const grid = await readSpreadsheet(chosen);
-      setBusy('checking');
-      const checked = await api.post('/students/import', { table: grid });
-      setTable(grid);
+      const checked = await api.upload('/students/import', importForm(chosen, false));
       setPreview(checked);
       setFilter(checked.summary.invalid > 0 ? 'problems' : 'all');
       setStage('preview');
     } catch (problem) {
-      setError(FILE_ERRORS.includes(problem.code) ? t(`students.import.errors.${problem.code}`, { size: MAX_FILE_BYTES / 1024 / 1024 }) : problem.message);
+      setError(problem.message);
     } finally {
       setBusy(null);
       if (inputRef.current) inputRef.current.value = '';
@@ -85,7 +97,7 @@ export default function ImportStudentsModal({ onClose, onImported }) {
     setError(null);
     setBusy('saving');
     try {
-      const saved = await api.post('/students/import', { table, commit: true });
+      const saved = await api.upload('/students/import', importForm(file, true));
       setResult(saved);
       setStage('done');
       onImported?.();
@@ -99,7 +111,6 @@ export default function ImportStudentsModal({ onClose, onImported }) {
   const restart = () => {
     setStage('upload');
     setPreview(null);
-    setTable(null);
     setFile(null);
     setError(null);
   };
@@ -165,7 +176,7 @@ export default function ImportStudentsModal({ onClose, onImported }) {
                     onChange={(event) => handleFile(event.target.files?.[0])}
                   />
                   <FileSpreadsheet size={30} aria-hidden="true" />
-                  <strong>{busy === 'reading' ? t('students.import.reading') : busy === 'checking' ? t('students.import.checking') : t('students.import.drop')}</strong>
+                  <strong>{busy === 'checking' ? t('students.import.checking') : t('students.import.drop')}</strong>
                   <span className="text-xs text-muted">{file && busy ? file.name : t('students.import.dropHint')}</span>
                 </label>
               </div>
@@ -252,10 +263,29 @@ export default function ImportStudentsModal({ onClose, onImported }) {
 
         {stage === 'done' && result && (
           <div className="stack">
-            <InlineAlert tone="success">
-              {t('students.import.done', { count: result.created.length })}
-              {result.skipped > 0 && <> {t('students.import.doneSkipped', { count: result.skipped })}</>}
+            <dl className="import-report">
+              <div><dt>{t('students.import.report.total')}</dt><dd className="mono">{result.total}</dd></div>
+              <div className="import-report--ok"><dt>{t('students.import.report.imported')}</dt><dd className="mono">{result.imported}</dd></div>
+              <div className={result.failed.length ? 'import-report--bad' : undefined}><dt>{t('students.import.report.failed')}</dt><dd className="mono">{result.failed.length}</dd></div>
+            </dl>
+            <InlineAlert tone={result.failed.length ? 'warning' : 'success'}>
+              {t('students.import.done', { count: result.imported })}
+              {result.failed.length > 0 && <> {t('students.import.doneSkipped', { count: result.failed.length })}</>}
             </InlineAlert>
+            {result.failed.length > 0 && (
+              <section className="stack">
+                <h3 className="import-step__title">{t('students.import.report.failedTitle')}</h3>
+                <ul className="import-failed">
+                  {result.failed.map((row) => (
+                    <li key={row.line}>
+                      <strong>{t('students.import.report.row', { line: row.line })}{row.name ? ` · ${row.name}` : ''}</strong>
+                      <ul>{row.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {result.created.length > 0 && <h3 className="import-step__title">{t('students.import.report.createdTitle')}</h3>}
             <ul className="import-created">
               {result.created.map((student) => (
                 <li key={student.id}>
