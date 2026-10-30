@@ -1,3 +1,4 @@
+import env from '../../config/env.js';
 import { query, queryOne } from '../../config/db.js';
 import { ApiError } from '../../middleware/errorHandler.js';
 import * as smsService from '../../services/smsService.js';
@@ -230,6 +231,73 @@ function summarizeRecipients(recipients, target) {
     samples: recipients.slice(0, 3).map((recipient) => ({ phone: normalizeTzPhone(recipient.phone) || recipient.phone, message: recipient.message })),
     allowedPlaceholders: PLACEHOLDERS[target.type],
     configured: smsService.isSmsConfigured(),
+  };
+}
+
+const RESULT_TEMPLATES = {
+  sw: '{school}: Ndugu {parent_name}, matokeo ya {student_name} ({reg_no}) {exam}: wastani {average}, {result}.',
+  en: '{school}: Dear {parent_name}, results for {student_name} ({reg_no}) {exam}: average {average}, {result}.',
+};
+
+/**
+ * Text parents the results saved by a bulk upload (Headmaster's explicit choice, so unlike a broadcast it does
+ * not wait for the exam to be published). `items` are [{ exam, student }]; positions are left out on purpose
+ * because they change until the whole class has been uploaded.
+ */
+export async function sendResultNotifications(items, user, context) {
+  const byExamClass = new Map();
+  for (const { exam, student } of items) {
+    const groupKey = `${exam.id}|${student.classId}`;
+    if (!byExamClass.has(groupKey)) byExamClass.set(groupKey, { exam, classId: student.classId, studentIds: new Set() });
+    byExamClass.get(groupKey).studentIds.add(student.id);
+  }
+
+  const language = env.beem.language === 'en' ? 'en' : 'sw';
+  const { name: schoolName } = await getSchoolProfile();
+  const messages = [];
+  let noResult = 0;
+  for (const { exam, classId, studentIds } of byExamClass.values()) {
+    const results = await computeClassResults(exam, classId);
+    const ranked = results.students.filter((row) => studentIds.has(row.studentId) && row.averagePct !== null);
+    noResult += studentIds.size - ranked.length; // absent from every subject: nothing to report
+    if (ranked.length === 0) continue;
+    const rows = await loadStudents(`s.id IN (${placeholders(ranked.length)})`, ranked.map((row) => row.studentId));
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    for (const row of ranked) {
+      const student = byId.get(row.studentId);
+      if (!student) continue;
+      const { overall } = row;
+      const division = overall.type === 'division' && overall.value !== 'INC';
+      const label = language === 'en' ? { division: 'Division', grade: 'grade' } : { division: 'Daraja', grade: 'gredi' };
+      messages.push({
+        recipient: student.parentPhone,
+        studentId: row.studentId,
+        message: render(RESULT_TEMPLATES[language], {
+          ...studentContext(student, schoolName),
+          exam: `${exam.name} ${exam.termName} ${exam.yearLabel}`,
+          average: `${round(row.averagePct, 1)}%`,
+          result: division ? `${label.division} ${overall.value}` : `${label.grade} ${overall.averageGrade ?? '-'}`,
+        }),
+      });
+    }
+  }
+
+  const valid = messages.filter((item) => normalizeTzPhone(item.recipient));
+  const summary = await smsService.sendBulkSMS({ messages: valid, category: 'results', sentBy: user.id, background: true });
+  await recordAudit({
+    ...context,
+    action: 'sms.results_import',
+    targetTable: 'sms_logs',
+    details: { batchId: summary.batchId, recipients: valid.length, invalidPhones: messages.length - valid.length, noResult },
+  });
+  return {
+    sent: valid.length > 0,
+    configured: smsService.isSmsConfigured(),
+    batchId: summary.batchId,
+    recipients: valid.length,
+    invalidPhones: messages.length - valid.length,
+    noResult,
+    sample: valid[0]?.message ?? null,
   };
 }
 

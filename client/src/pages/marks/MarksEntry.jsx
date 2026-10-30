@@ -1,5 +1,6 @@
-import { Award, ClipboardList, NotebookPen } from 'lucide-react';
+import { Award, ClipboardList, FileSpreadsheet, NotebookPen } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import ResultsImportModal from '../../components/marks/ResultsImportModal.jsx';
 import { EmptyState, ErrorBlock, InlineAlert, LoadingBlock } from '../../components/ui/Feedback.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 import { GradeChip, StatusBadge } from '../../components/ui/StatusBadge.jsx';
@@ -41,6 +42,7 @@ export default function MarksEntry() {
   const [params, setParams] = useSearchParams();
   const [view, setView] = useState(() => (params.get('view') === 'results' ? 'results' : 'entry'));
   const [lastSummary, setLastSummary] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const selection = {
     examId: params.get('examId') || '',
@@ -78,6 +80,10 @@ export default function MarksEntry() {
   };
 
   const assignmentKey = `${selection.classId}|${selection.streamId}|${selection.subjectId}`;
+  // Classes for the upload template: teachers see only the classes they are assigned to.
+  const importClasses = isTeacher
+    ? [...new Map((assignments.data ?? []).map((assignment) => [assignment.classId, { id: assignment.classId, className: assignment.className }])).values()]
+    : classes.data ?? [];
 
   return (
     <div className="stack-lg">
@@ -85,7 +91,24 @@ export default function MarksEntry() {
         eyebrow={t('pages.marks.eyebrow')}
         title={t('pages.marks.title')}
         subtitle={t('pages.marks.subtitle')}
+        actions={(
+          <button type="button" className="btn btn--outline" onClick={() => setImporting(true)}>
+            <FileSpreadsheet size={16} aria-hidden="true" /> {t('resultsImport.button')}
+          </button>
+        )}
       />
+      {importing && (
+        <ResultsImportModal
+          exams={exams.data ?? []}
+          classes={importClasses}
+          canSendSms={hasRole('admin')}
+          onClose={() => setImporting(false)}
+          onImported={() => {
+            exams.reload();
+            sheet.reload();
+          }}
+        />
+      )}
 
       <div className="filter-bar card">
         <label className="filter-bar__field">

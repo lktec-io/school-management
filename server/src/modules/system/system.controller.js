@@ -36,8 +36,8 @@ export const updateSettingsHandler = asyncHandler(async (req, res) => {
     .rule('instagramReels', ({ instagramReels }) => {
       if (!instagramReels) return null;
       const { codes, invalid } = parseReelCodes(instagramReels);
-      if (invalid.length) return `Not an Instagram reel link: ${invalid[0].slice(0, 60)}`;
-      return codes.length > MAX_INSTAGRAM_REELS ? `Add at most ${MAX_INSTAGRAM_REELS} reels` : null;
+      if (invalid.length) return `Not an Instagram or YouTube video link: ${invalid[0].slice(0, 60)}`;
+      return codes.length > MAX_INSTAGRAM_REELS ? `Add at most ${MAX_INSTAGRAM_REELS} videos` : null;
     })
     .result();
   // Stored as bare reel codes, one per line, in the order given.

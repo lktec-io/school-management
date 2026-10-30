@@ -1535,3 +1535,9 @@ label.btn.is-disabled { opacity: 0.55; pointer-events: none; }
 .import-failed > li strong { color: var(--color-danger-text); }
 .import-failed ul { margin: var(--space-1) 0 0; padding-left: var(--space-5); color: var(--color-text-secondary); font-size: var(--text-xs); line-height: 1.5; }
 @media (max-width: 480px) { .import-report { grid-template-columns: minmax(0, 1fr); } }
+.import-template-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); width: 100%; }
+.import-chip--muted { border-color: var(--color-border); background: var(--color-surface-sunken); color: var(--color-text-secondary); }
+.import-sms { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-surface-muted); }
+.import-sms__toggle { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; }
+.import-sms__toggle input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--color-navy-800); }
+@media (max-width: 640px) { .import-template-fields { grid-template-columns: minmax(0, 1fr); } }

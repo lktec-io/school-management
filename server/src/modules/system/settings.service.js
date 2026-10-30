@@ -118,15 +118,17 @@ export async function registrationPrefix() {
 }
 
 /**
- * Reel links or codes, one per line → ["DdgH5x0gtdl", …]. Accepts full links such as
- * https://www.instagram.com/reel/DdgH5x0gtdl/?rpxt=… Returns { codes, invalid } so callers can report bad lines.
+ * Video links or codes, one per line → ["DdgH5x0gtdl", "yt:uP2_RXm-cn8", …]. Accepts Instagram links such as
+ * https://www.instagram.com/reel/DdgH5x0gtdl/?rpxt=… and YouTube links (stored with a "yt:" prefix).
+ * Returns { codes, invalid } so callers can report bad lines.
  */
 export function parseReelCodes(text) {
   const codes = [];
   const invalid = [];
   for (const line of String(text ?? '').split(/[\r\n]+/).map((value) => value.trim()).filter(Boolean)) {
     const fromUrl = line.match(/^https:\/\/(?:www\.)?instagram\.com\/(?:reels?|p)\/([A-Za-z0-9_-]{5,40})(?:[/?#].*)?$/i);
-    const code = fromUrl ? fromUrl[1] : REEL_CODE.test(line) ? line : null;
+    const fromYoutube = line.match(/^(?:https:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)|yt:)([A-Za-z0-9_-]{11})(?:[/?&#].*)?$/i);
+    const code = fromYoutube ? `yt:${fromYoutube[1]}` : fromUrl ? fromUrl[1] : REEL_CODE.test(line) ? line : null;
     if (code) {
       if (!codes.includes(code)) codes.push(code);
     } else {

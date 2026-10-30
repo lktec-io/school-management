@@ -46,8 +46,8 @@ export const TOURS = [
   { id: 'bagamoyo', image: tours('bagamoyo.jpg'), name: 'Bagamoyo', note: { sw: 'Mji wa kihistoria', en: 'Historic coastal town' } },
 ];
 
-/** Fallback reels (https://www.instagram.com/reel/<code>/) until School Settings lists the school's own. */
-export const INSTAGRAM_REELS = ['DdgH5x0gtdl', 'Dd_c3hOgiCW'];
+/** Fallback videos until School Settings lists the school's own: Instagram reel codes, or yt:<id> for YouTube. */
+export const INSTAGRAM_REELS = ['DdgH5x0gtdl', 'Dd_c3hOgiCW', 'yt:uP2_RXm-cn8'];
 
 /** School administration (no political office holders). `nameFrom` reads a name from School Settings. */
 export const STAFF = [
@@ -145,6 +145,7 @@ const sw = {
     frameTitle: 'Video ya Trifonia Academy kwenye Instagram',
     reel: 'Video',
     watch: 'Tazama kwenye Instagram',
+    watchYoutube: 'Tazama kwenye YouTube',
   },
   administration: {
     eyebrow: 'Muundo wa Uongozi',
@@ -268,6 +269,7 @@ const en = {
     frameTitle: 'Trifonia Academy video on Instagram',
     reel: 'Video',
     watch: 'Watch on Instagram',
+    watchYoutube: 'Watch on YouTube',
   },
   administration: {
     eyebrow: 'Administrative Structure',

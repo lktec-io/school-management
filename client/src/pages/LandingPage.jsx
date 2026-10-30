@@ -120,13 +120,16 @@ function useScrollReveal(rootRef, refreshKey) {
   }, [rootRef, refreshKey]);
 }
 
-/** Instagram reel embed (Instagram's own player; it does not allow autoplay from other sites). */
-function ReelEmbed({ code, title, label, watch, index }) {
+/** Instagram reel or YouTube video (yt:<id>) in the site's video grid. Neither player autoplays. */
+function ReelEmbed({ code, title, label, watch, watchYoutube, index }) {
+  const youtubeId = code.startsWith('yt:') ? code.slice(3) : null;
+  const src = youtubeId ? `https://www.youtube-nocookie.com/embed/${youtubeId}` : `https://www.instagram.com/reel/${code}/embed/`;
+  const href = youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : `https://www.instagram.com/reel/${code}/`;
   return (
     <figure className="reel reveal" style={delay(index)}>
-      <div className="reel__frame">
+      <div className={`reel__frame${youtubeId ? ' reel__frame--video' : ''}`}>
         <iframe
-          src={`https://www.instagram.com/reel/${code}/embed/`}
+          src={src}
           title={`${title} ${index + 1}`}
           loading="lazy"
           allowFullScreen
@@ -135,8 +138,8 @@ function ReelEmbed({ code, title, label, watch, index }) {
       </div>
       <figcaption className="reel__caption">
         <span>{label} <span className="mono">{index + 1}</span></span>
-        <a href={`https://www.instagram.com/reel/${code}/`} target="_blank" rel="noopener noreferrer">
-          <InstagramIcon size={14} aria-hidden="true" /> {watch}
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          {youtubeId ? <ExternalLink size={14} aria-hidden="true" /> : <InstagramIcon size={14} aria-hidden="true" />} {youtubeId ? watchYoutube : watch}
         </a>
       </figcaption>
     </figure>
@@ -369,7 +372,7 @@ export default function LandingPage() {
             <SectionHead eyebrow={t.media.eyebrow} title={t.media.title} lead={t.media.lead} />
             <div className={`media__reels media__reels--${Math.min(reels.length, 3)}`}>
               {reels.slice(0, 3).map((code, index) => (
-                <ReelEmbed key={code} code={code} index={index} title={t.media.frameTitle} label={t.media.reel} watch={t.media.watch} />
+                <ReelEmbed key={code} code={code} index={index} title={t.media.frameTitle} label={t.media.reel} watch={t.media.watch} watchYoutube={t.media.watchYoutube} />
               ))}
             </div>
             <div className="media__actions reveal">
@@ -378,9 +381,11 @@ export default function LandingPage() {
                   <InstagramIcon size={17} aria-hidden="true" /> {t.media.follow}
                 </a>
               )}
-              <a href={`https://www.instagram.com/reel/${reels[0]}/`} className="site-btn site-btn--outline" target="_blank" rel="noopener noreferrer">
-                <ExternalLink size={16} aria-hidden="true" /> {t.media.open}
-              </a>
+              {!reels[0].startsWith('yt:') && (
+                <a href={`https://www.instagram.com/reel/${reels[0]}/`} className="site-btn site-btn--outline" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={16} aria-hidden="true" /> {t.media.open}
+                </a>
+              )}
             </div>
           </div>
         </section>

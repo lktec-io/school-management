@@ -1,8 +1,8 @@
 import { ApiError, asyncHandler } from '../../middleware/errorHandler.js';
+import { uploadedTable } from '../../middleware/spreadsheetUpload.js';
 import { auditContext } from '../../utils/audit.js';
 import { todayInSchoolTz } from '../../utils/dates.js';
 import { parsePagination } from '../../utils/pagination.js';
-import { SpreadsheetError, readSpreadsheet } from '../../utils/spreadsheet.js';
 import { optionalId, parseId, validator } from '../../utils/validator.js';
 import * as importService from './import.service.js';
 import * as photoService from './photo.service.js';
@@ -53,17 +53,7 @@ export const importTemplate = asyncHandler(async (req, res) => {
  * registered and the response reports { total, imported, created[], failed[{ line, reasons, message }] }.
  */
 export const importStudents = asyncHandler(async (req, res) => {
-  let table;
-  if (req.file) {
-    try {
-      table = readSpreadsheet(req.file);
-    } catch (error) {
-      if (error instanceof SpreadsheetError) throw ApiError.badRequest(error.message, { file: error.message });
-      throw error;
-    }
-  } else {
-    table = req.body?.table;
-  }
+  const table = req.file ? uploadedTable(req.file) : req.body?.table;
   if (!Array.isArray(table)) throw ApiError.badRequest('Upload a CSV or Excel (.xlsx) file in the "file" field', { file: 'No file received' });
   const cells = table.map((row) => (Array.isArray(row) ? row.map((cell) => (cell === null || cell === undefined ? '' : String(cell))) : row));
   const commit = req.body?.commit === true || req.body?.commit === 'true';
